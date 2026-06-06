@@ -19,6 +19,13 @@
 #include "FlashStringHelper.h"
 #include <Arduino.h>    // millis(), delay(), ESP
 
+#ifndef WIFI_AP_CHANNEL
+#define WIFI_AP_CHANNEL 1
+#endif
+
+static_assert(WIFI_AP_CHANNEL >= 1 && WIFI_AP_CHANNEL <= 13,
+              "WIFI_AP_CHANNEL must be in range [1, 13]");
+
 // ---------------------------------------------------------------------------
 // PROGMEM string constants + compile-time defaults
 // ---------------------------------------------------------------------------
@@ -31,6 +38,7 @@ namespace WiFiConsts
     constexpr const char default_ap_ssid[]       = "aMaker-";
     constexpr const char default_ap_password[]   = "amaker-club";
     constexpr const char default_hostname[]      = "amakerbot-";
+    constexpr uint8_t default_ap_channel         = WIFI_AP_CHANNEL;
 
     constexpr uint8_t  wifi_conn_max_attempts = 8;    ///< Attempts before giving up on STA
     constexpr uint32_t wifi_conn_sleep_ms     = 500;  ///< ms between connection attempts
@@ -122,6 +130,7 @@ bool WifiService::open_access_point()
     {
         debugLogger->info(std::string("AP SSID: ") + full_ap_ssid);
         debugLogger->info(std::string("Hostname: ") + getHostname());
+        debugLogger->info(std::string("AP channel: ") + std::to_string(WiFiConsts::default_ap_channel));
     }
 
     WiFi.disconnect(true);
@@ -131,7 +140,9 @@ bool WifiService::open_access_point()
     WiFi.mode(WIFI_AP_STA);
     WiFi.setHostname(getHostname().c_str());
 
-    if (!WiFi.softAP(full_ap_ssid.c_str(), ap_password_.c_str()))
+    if (!WiFi.softAP(full_ap_ssid.c_str(),
+                     ap_password_.c_str(),
+                     WiFiConsts::default_ap_channel))
     {
         if (debugLogger)
             debugLogger->error(FPSTR(WiFiConsts::msg_ap_failed) + full_ap_ssid);

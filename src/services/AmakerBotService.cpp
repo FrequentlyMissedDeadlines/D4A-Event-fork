@@ -8,6 +8,7 @@
  */
 
 #include "services/AmakerBotService.h"
+#include "RollingLogger.h"
 #include "FlashStringHelper.h"
 #include <Arduino.h>          // millis(), esp_random()
 #include <LittleFS.h>         // listScripts / getScript / saveScript / deleteScript
@@ -484,15 +485,18 @@ std::string AmakerBotService::dispatch(const uint8_t *data, size_t len,
     }
     for (IsBotActionHandlerInterface *handler : bot_message_handlers) {
         if (handler && (data[0]>>4) == handler->getBotServiceId()) {
-                    // Convert data to hex string format
-        std::string hex_data;
-        for (size_t i = 0; i < len; ++i) {
-            char buf[3];
-            snprintf(buf, sizeof(buf), "%02X", data[i]);
-            // if (i > 0) hex_data += " ";
-            hex_data += buf;
-        }
-            serviceLogger->info(("RX " + hex_data).c_str(), svccode);
+            if (serviceLogger &&
+                serviceLogger->get_log_level() >= RollingLogger::DEBUG)
+            {
+                std::string hex_data;
+                hex_data.reserve(len * 2);
+                for (size_t i = 0; i < len; ++i) {
+                    char buf[3];
+                    snprintf(buf, sizeof(buf), "%02X", data[i]);
+                    hex_data += buf;
+                }
+                serviceLogger->debug(("RX " + hex_data).c_str(), svccode);
+            }
             return handler->handleBotMessage(data, len);
         }
     }

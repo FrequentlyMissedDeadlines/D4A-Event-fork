@@ -63,6 +63,8 @@ namespace BotServerWebConsts
 {
     constexpr const char str_service_name[]   PROGMEM = "BotServerWeb";
     constexpr const char path_botserver[]     PROGMEM = "/botserver";
+    constexpr const char path_echo[]          PROGMEM = "/echo";
+    constexpr const char path_fsprobe[]       PROGMEM = "/fsprobe";
     constexpr const char path_buildinfo_api[] PROGMEM = "/api/buildinfo.json";
     constexpr const char param_cmd[]          PROGMEM = "cmd";
     constexpr const char mime_octet[]         PROGMEM = "application/octet-stream";
@@ -92,8 +94,8 @@ namespace BotServerWebConsts
     constexpr const char err_cam_busy[]       PROGMEM = "Snapshot unavailable during active stream";
     constexpr const char err_cam_capture[]    PROGMEM = "Camera capture failed";
     constexpr uint8_t    cam_jpeg_quality     = 10;   ///< JPEG quality for RGB565→JPEG fallback conversion
-    constexpr uint32_t   cam_queue_timeout_ms = 100;  ///< Max wait for a snapshot frame
-    constexpr uint32_t   cam_stream_wait_ms   = 150;  ///< Blocking wait for next stream frame (ms)
+    constexpr uint32_t   cam_queue_timeout_ms = 10;   ///< Deprecated: snapshot path no longer blocks for new frame
+    constexpr uint32_t   cam_stream_wait_ms   = 5;    ///< Short wait to reduce callback blocking under load
     constexpr uint16_t   default_port         = 80;
     // ---- Script filesystem routes ----
     constexpr const char path_scripts[]              PROGMEM = "/scripts";

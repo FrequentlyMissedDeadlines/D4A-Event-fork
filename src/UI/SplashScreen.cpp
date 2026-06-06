@@ -60,9 +60,9 @@ static int32_t png_seek_cb(PNGFILE * /*page*/, int32_t position)
  * @brief PNGdec per-row draw callback — pushes one RGB565 line to the TFT.
  *
  * Transparent pixels (alpha < 128) are replaced with TFT_BLACK.
- * Must return 0 to continue decoding (PNGdec requirement).
+ * Callback invoked by PNGdec for each decoded row.
  */
-static int png_draw_cb(PNGDRAW *pDraw)
+static void png_draw_cb(PNGDRAW *pDraw)
 {
     uint16_t line_buf[SplashScreenConsts::max_img_width];
     s_png.getLineAsRGB565(pDraw, line_buf, PNG_RGB565_BIG_ENDIAN, 0xffffffff);
@@ -70,7 +70,6 @@ static int png_draw_cb(PNGDRAW *pDraw)
     if (pDraw->y == 0) {
         debug_logger.debug(std::string("[SplashScreen] png_draw_cb: starting draw at x=") + std::to_string(s_draw_x) + " y=" + std::to_string(s_draw_y) + " width=" + std::to_string(pDraw->iWidth));
     }
-    return 1; // non-zero = continue decoding (0 would trigger PNG_QUIT_EARLY)
 }
 
 // ---------------------------------------------------------------------------

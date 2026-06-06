@@ -10,9 +10,34 @@
 #include <Arduino.h>        // FPSTR()
 #include <esp_camera.h>
 #include <img_converters.h> // frame2jpg()
+#include <memory>
 
 namespace
 {
+namespace StaticRouteConsts
+{
+    constexpr const char path_botscript_html[] PROGMEM = "/BotScript.html";
+    constexpr const char path_botscript_js[] PROGMEM = "/BotScript.js";
+    constexpr const char path_botscript_actions_js[] PROGMEM = "/BotScriptActions.js";
+    constexpr const char path_common_js[] PROGMEM = "/common.js";
+    constexpr const char path_amaker_css[] PROGMEM = "/amaker.css";
+    constexpr const char path_ws_joystick_css[] PROGMEM = "/WebSocketJoystick.css";
+    constexpr const char path_botscript_bundle_css[] PROGMEM = "/BotScript.bundle.css";
+    constexpr const char path_botscript_bundle_js[] PROGMEM = "/BotScript.bundle.js";
+
+    constexpr const char fs_botscript_html[] PROGMEM = "/www/BotScript.html";
+    constexpr const char fs_botscript_js[] PROGMEM = "/www/BotScript.js";
+    constexpr const char fs_botscript_actions_js[] PROGMEM = "/www/BotScriptActions.js";
+    constexpr const char fs_common_js[] PROGMEM = "/www/common.js";
+    constexpr const char fs_amaker_css[] PROGMEM = "/www/amaker.css";
+    constexpr const char fs_ws_joystick_css[] PROGMEM = "/www/WebSocketJoystick.css";
+    constexpr const char fs_botscript_bundle_css[] PROGMEM = "/www/BotScript.bundle.css";
+    constexpr const char fs_botscript_bundle_js[] PROGMEM = "/www/BotScript.bundle.js";
+
+    constexpr const char mime_css[] PROGMEM = "text/css; charset=utf-8";
+    constexpr const char mime_js[] PROGMEM = "application/javascript; charset=utf-8";
+}
+
 /**
  * @brief Escape a string so it is safe to embed as a JSON string value.
  * @param input Source string.
@@ -71,6 +96,154 @@ void appendJsonStringField(std::string &json,
     json += '"';
     if (with_comma)
         json += ',';
+}
+
+/**
+ * @brief Build a streaming response that owns payload storage via shared_ptr.
+ *
+ * This avoids use-after-free in async send paths by keeping payload bytes alive
+ * for the lifetime of the response callback.
+ */
+AsyncWebServerResponse *beginOwnedResponse(AsyncWebServerRequest *request,
+                                           const char *mime,
+                                           const std::shared_ptr<std::string> &payload)
+{
+    return request->beginResponse(
+        mime,
+        payload->size(),
+        [payload](uint8_t *buffer, size_t maxLen, size_t index) -> size_t
+        {
+            if (index >= payload->size())
+                return 0;
+
+            const size_t remaining = payload->size() - index;
+            const size_t to_copy = (remaining < maxLen) ? remaining : maxLen;
+            memcpy(buffer, payload->data() + index, to_copy);
+            return to_copy;
+        });
+}
+
+/**
+ * @brief Log a received HTTP request in a compact form for diagnostics.
+ */
+void logHttpRequest(RollingLogger *logger, AsyncWebServerRequest *request)
+{
+    if (!logger || !request)
+        return;
+
+    std::string msg("HTTP ");
+    msg += request->methodToString();
+    msg += ' ';
+    msg += request->url().c_str();
+    msg += " from ";
+    msg += request->client()->remoteIP().toString().c_str();
+    logger->info(msg, "HTTP ");
+}
+
+/**
+ * @brief Register a GET static-file route with lightweight open/size logging.
+ */
+void registerLoggedStaticRoute(AsyncWebServer *server,
+                               RollingLogger *logger,
+                               const char *url_path,
+                               const char *fs_path,
+                               const char *mime)
+{
+    server->on(url_path, HTTP_GET,
+        [logger, fs_path, mime](AsyncWebServerRequest *request)
+        {
+            logHttpRequest(logger, request);
+
+            std::string selected_path(fs_path);
+            bool use_gzip = false;
+
+            if (request->hasHeader("Accept-Encoding"))
+            {
+                const AsyncWebHeader *accept_header = request->getHeader("Accept-Encoding");
+                if (accept_header && accept_header->value().indexOf("gzip") >= 0)
+                {
+                    const std::string gz_path = selected_path + ".gz";
+                    if (LittleFS.exists(gz_path.c_str()))
+                    {
+                        selected_path = gz_path;
+                        use_gzip = true;
+                    }
+                }
+            }
+
+            File file = LittleFS.open(selected_path.c_str(), "r");
+            if (!file)
+            {
+                if (logger)
+                    logger->warning(std::string("HTTP static open failed ") + selected_path,
+                                    "HTTP ");
+                request->send(404, FPSTR(BotServerWebConsts::mime_text), "Not found");
+                return;
+            }
+
+            const size_t size = file.size();
+
+            if (logger)
+            {
+                logger->info(std::string("HTTP static ")
+                             + request->url().c_str()
+                             + " size="
+                             + std::to_string(static_cast<unsigned long>(size))
+                             + (use_gzip ? " gz=1" : " gz=0"),
+                             "HTTP ");
+            }
+
+            file.seek(0, SeekSet);
+
+            auto payload = std::make_shared<std::string>();
+            payload->resize(size);
+
+            size_t bytes_read = 0;
+            while (bytes_read < size)
+            {
+                const size_t remaining = size - bytes_read;
+                const size_t read_now = file.read(
+                    reinterpret_cast<uint8_t *>(payload->data() + bytes_read),
+                    remaining);
+                if (read_now == 0)
+                    break;
+                bytes_read += read_now;
+            }
+            file.close();
+
+            if (bytes_read != size)
+            {
+                if (logger)
+                    logger->warning(std::string("HTTP static short read ")
+                                    + selected_path
+                                    + " got="
+                                    + std::to_string(static_cast<unsigned long>(bytes_read))
+                                    + " want="
+                                    + std::to_string(static_cast<unsigned long>(size)),
+                                    "HTTP ");
+                request->send(500, FPSTR(BotServerWebConsts::mime_text), "Read failed");
+                return;
+            }
+
+            AsyncWebServerResponse *response = beginOwnedResponse(
+                request,
+                mime,
+                payload);
+            if (!response)
+            {
+                if (logger)
+                    logger->warning(std::string("HTTP static response alloc failed ") + selected_path,
+                                    "HTTP ");
+                request->send(500, FPSTR(BotServerWebConsts::mime_text), "OOM");
+                return;
+            }
+
+            if (use_gzip)
+                response->addHeader("Content-Encoding", "gzip");
+            response->addHeader("Connection", "close");
+            response->addHeader("Cache-Control", "no-store");
+            request->send(response);
+        });
 }
 } // namespace
 
@@ -140,6 +313,8 @@ void BotServerWeb::register_get_botserver()
     server_->on(BotServerWebConsts::path_botserver, HTTP_GET,
         [this](AsyncWebServerRequest *request)
         {
+            logHttpRequest(logger_, request);
+
             // ---- Validate `cmd` parameter ----
             if (!request->hasParam(FPSTR(BotServerWebConsts::param_cmd)))
             {
@@ -177,24 +352,18 @@ void BotServerWeb::register_get_botserver()
             }
 
             ++tx_count_;
-            // AsyncWebServer requires the response buffer to stay valid until
-            // the send completes. Using send_P / a heap copy via String is the
-            // standard pattern for dynamic binary content in ESPAsyncWebServer.
-            // We copy into an Arduino String (which owns its buffer) and send it.
-            // For the small frames used by the bot protocol this is fine.
-            uint8_t *buf = reinterpret_cast<uint8_t *>(malloc(response.size()));
-            if (!buf)
+            auto payload = std::make_shared<std::string>(response);
+            AsyncWebServerResponse *resp = beginOwnedResponse(
+                request,
+                reinterpret_cast<const char *>(FPSTR(BotServerWebConsts::mime_octet)),
+                payload);
+            if (!resp)
             {
                 request->send(500, FPSTR(BotServerWebConsts::mime_text), "OOM");
                 return;
             }
-            memcpy(buf, response.data(), response.size());
-            AsyncWebServerResponse *resp = request->beginResponse(
-                200, FPSTR(BotServerWebConsts::mime_octet),
-                buf, response.size());
             resp->addHeader("Cache-Control", "no-store");
             request->send(resp);
-            free(buf);
         });
 }
 
@@ -207,6 +376,8 @@ void BotServerWeb::registerBuildInfoRoute()
     server_->on(BotServerWebConsts::path_buildinfo_api, HTTP_GET,
         [this](AsyncWebServerRequest *request)
         {
+            logHttpRequest(logger_, request);
+
             std::string json;
             json.reserve(768);
 
@@ -246,11 +417,19 @@ void BotServerWeb::registerBuildInfoRoute()
             json += "}}";
             json += '}';
 
-            AsyncWebServerResponse *response = request->beginResponse(
-                200, FPSTR(BotServerWebConsts::mime_json), json.c_str());
-            response->addHeader("Cache-Control",
-                                FPSTR(BotServerWebConsts::cache_control_no_store));
-            request->send(response);
+            auto payload = std::make_shared<std::string>(std::move(json));
+            AsyncWebServerResponse *resp = beginOwnedResponse(
+                request,
+                reinterpret_cast<const char *>(FPSTR(BotServerWebConsts::mime_json)),
+                payload);
+            if (!resp)
+            {
+                request->send(500, FPSTR(BotServerWebConsts::mime_text), "OOM");
+                return;
+            }
+            resp->addHeader("Cache-Control",
+                            FPSTR(BotServerWebConsts::cache_control_no_store));
+            request->send(resp);
         });
 }
 
@@ -285,13 +464,84 @@ bool BotServerWeb::start()
     register_get_botserver();
     registerBuildInfoRoute();
     registerScriptRoutes();
+    registerLoggedStaticRoute(server_,
+                              logger_,
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::path_botscript_html)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::fs_botscript_html)),
+                              reinterpret_cast<const char *>(FPSTR(BotServerWebConsts::mime_html)));
+    registerLoggedStaticRoute(server_,
+                              logger_,
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::path_botscript_js)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::fs_botscript_js)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::mime_js)));
+    registerLoggedStaticRoute(server_,
+                              logger_,
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::path_botscript_actions_js)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::fs_botscript_actions_js)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::mime_js)));
+    registerLoggedStaticRoute(server_,
+                              logger_,
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::path_common_js)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::fs_common_js)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::mime_js)));
+    registerLoggedStaticRoute(server_,
+                              logger_,
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::path_amaker_css)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::fs_amaker_css)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::mime_css)));
+    registerLoggedStaticRoute(server_,
+                              logger_,
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::path_ws_joystick_css)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::fs_ws_joystick_css)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::mime_css)));
+    registerLoggedStaticRoute(server_,
+                              logger_,
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::path_botscript_bundle_css)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::fs_botscript_bundle_css)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::mime_css)));
+    registerLoggedStaticRoute(server_,
+                              logger_,
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::path_botscript_bundle_js)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::fs_botscript_bundle_js)),
+                              reinterpret_cast<const char *>(FPSTR(StaticRouteConsts::mime_js)));
+    server_->on(BotServerWebConsts::path_echo, HTTP_GET,
+        [this](AsyncWebServerRequest *request)
+        {
+            logHttpRequest(logger_, request);
+            request->send(200, FPSTR(BotServerWebConsts::mime_text), "OK");
+        });
+    server_->on(BotServerWebConsts::path_fsprobe, HTTP_GET,
+        [this](AsyncWebServerRequest *request)
+        {
+            logHttpRequest(logger_, request);
+
+            File index_file = LittleFS.open("/www/index.html", "r");
+            std::string body;
+            body.reserve(128);
+
+            body += "exists=";
+            body += LittleFS.exists("/www/index.html") ? "1" : "0";
+            body += "\nopened=";
+            body += index_file ? "1" : "0";
+            body += "\nsize=";
+            body += index_file ? std::to_string(static_cast<unsigned long>(index_file.size())) : "0";
+            body += "\n";
+
+            if (index_file)
+                index_file.close();
+
+            request->send(200, FPSTR(BotServerWebConsts::mime_text), body.c_str());
+        });
     server_->on("/", HTTP_GET, [this](AsyncWebServerRequest *request)   
     {
+        logHttpRequest(logger_, request);
         request->redirect(FPSTR(BotServerWebConsts::default_file));
     });
 
     server_->onNotFound([this](AsyncWebServerRequest *request)
     {
+        if (request->method() == HTTP_GET)
+            logHttpRequest(logger_, request);
         ++dropped_count_;
         request->send(404, FPSTR(BotServerWebConsts::mime_html), "<html><body><h1>404 Not Found</h1> Try <a href=\"/\">/</a></body></html>");
     });
@@ -345,6 +595,8 @@ void BotServerWeb::registerScriptRoutes()
     server_->on(BotServerWebConsts::path_scripts_item, HTTP_GET,
         [this](AsyncWebServerRequest *request)
         {
+            logHttpRequest(logger_, request);
+
             // URL is "/scripts/<name>" — strip the "/scripts/" prefix (9 chars)
             const std::string name(request->url().substring(9).c_str());
             if (!bot_.scriptExists(name))
@@ -410,6 +662,8 @@ void BotServerWeb::registerScriptRoutes()
     server_->on(BotServerWebConsts::path_scripts, HTTP_GET,
         [this](AsyncWebServerRequest *request)
         {
+            logHttpRequest(logger_, request);
+
             const std::vector<std::string> names = bot_.listScripts();
 
             // Build compact JSON array without pulling in ArduinoJson
@@ -448,6 +702,8 @@ void BotServerWeb::registerCameraRoutes(QueueHandle_t cam_queue)
     server_->on(BotServerWebConsts::path_snapshot, HTTP_GET,
         [this](AsyncWebServerRequest *request)
         {
+            logHttpRequest(logger_, request);
+
             if (!cam_queue_)
             {
                 request->send(503, FPSTR(BotServerWebConsts::mime_text),
@@ -469,9 +725,6 @@ void BotServerWeb::registerCameraRoutes(QueueHandle_t cam_queue)
                 if (latest) esp_camera_fb_return(latest);
                 latest = fb;
             }
-            if (!latest)
-                xQueueReceive(cam_queue_, &latest,
-                              pdMS_TO_TICKS(BotServerWebConsts::cam_queue_timeout_ms));
 
             if (!latest)
             {
@@ -510,10 +763,20 @@ void BotServerWeb::registerCameraRoutes(QueueHandle_t cam_queue)
                 return;
             }
 
-            AsyncWebServerResponse *resp =
-                request->beginResponse(200,
-                                       FPSTR(BotServerWebConsts::mime_jpeg),
-                                       jpg_buf, jpg_len);
+            auto payload = std::make_shared<std::string>(
+                reinterpret_cast<const char *>(jpg_buf),
+                jpg_len);
+
+            AsyncWebServerResponse *resp = beginOwnedResponse(
+                request,
+                reinterpret_cast<const char *>(FPSTR(BotServerWebConsts::mime_jpeg)),
+                payload);
+            if (!resp)
+            {
+                if (owns_buf) free(jpg_buf);
+                request->send(500, FPSTR(BotServerWebConsts::mime_text), "OOM");
+                return;
+            }
             resp->addHeader("Content-Disposition",
                             FPSTR(BotServerWebConsts::snapshot_filename));
             resp->addHeader("Cache-Control", "no-store");
@@ -526,6 +789,8 @@ void BotServerWeb::registerCameraRoutes(QueueHandle_t cam_queue)
     server_->on(BotServerWebConsts::path_stream, HTTP_GET,
         [this](AsyncWebServerRequest *request)
         {
+            logHttpRequest(logger_, request);
+
             if (!cam_queue_)
             {
                 request->send(503, FPSTR(BotServerWebConsts::mime_text),

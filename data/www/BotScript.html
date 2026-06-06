@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Bot Script - aMaker</title>
-  <link rel="stylesheet" href="./amaker.css">
-  <link rel="stylesheet" href="./WebSocketJoystick.css">
+  <link rel="preload" href="./BotScript.bundle.css" as="style">
+  <link rel="preload" href="./BotScript.bundle.js" as="script">
+  <link rel="stylesheet" href="./BotScript.bundle.css">
 </head>
 <body>
   <nav class="topnav">   
@@ -171,9 +172,7 @@
     </div>
   </div>
 
-  <script src="./common.js"></script>
-  <script src="./BotScript.js"></script>
-  <script src="./BotScriptActions.js"></script>
+  <script src="./BotScript.bundle.js"></script>
   <div class="statusbar">
     <span class="status-left" id="page-status"></span>
     <span class="status-right">aMaker Bot - script runner</span>
