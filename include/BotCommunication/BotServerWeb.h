@@ -79,6 +79,7 @@ namespace BotServerWebConsts
     constexpr const char static_fs_root[]        PROGMEM = "/www";
     constexpr const char static_url_root[]    PROGMEM = "/";
     constexpr const char default_file[]       PROGMEM = "index.html";
+    constexpr const char root_redirect_target[] PROGMEM = "/help/d4a-contest-guide.html";
     constexpr const char cache_control[]      PROGMEM = "max-age=86400"; ///< 1 day
     constexpr const char cache_control_no_store[] PROGMEM = "no-store, max-age=0";
     constexpr const char msg_fs_ok[]          PROGMEM = "BotServerWeb: LittleFS mounted";

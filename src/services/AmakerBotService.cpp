@@ -57,6 +57,9 @@ namespace AmakerBotConsts
 
     // ---- Script filesystem constants ----------------------------------------
     constexpr const char scripts_dir[]             PROGMEM = "/scripts";
+    constexpr const char scripts_dir_alt[]         PROGMEM = "/data/scripts";
+    constexpr const char scripts_index[]           PROGMEM = "/scripts/index.txt";
+    constexpr const char scripts_index_alt[]       PROGMEM = "/data/scripts/index.txt";
     constexpr const char msg_script_saved[]        PROGMEM = "AmakerBot: script saved: ";
     constexpr const char msg_script_deleted[]      PROGMEM = "AmakerBot: script deleted: ";
     constexpr const char msg_script_not_found[]    PROGMEM = "AmakerBot: script not found: ";
@@ -592,32 +595,220 @@ std::vector<std::string> AmakerBotService::listScripts()
 {
     std::vector<std::string> names;
 
-    if (!LittleFS.exists(AmakerBotConsts::scripts_dir))
-        return names;
+    if (debugLogger)
+        debugLogger->info("AmakerBot:listScripts begin");
 
-    File dir = LittleFS.open(AmakerBotConsts::scripts_dir);
-    if (!dir || !dir.isDirectory())
-        return names;
+    auto append_entry_name = [&names](const std::string &entry_name,
+                                      const char *prefix_to_strip)
+    {
+        std::string fname = entry_name;
+        if (prefix_to_strip)
+        {
+            if (fname.rfind(prefix_to_strip, 0) != 0)
+                return;
+            fname = fname.substr(std::char_traits<char>::length(prefix_to_strip));
+        }
 
-    File entry = dir.openNextFile();
+        const size_t slash = fname.rfind('/');
+        if (slash != std::string::npos)
+            fname = fname.substr(slash + 1);
+
+        if (fname.empty())
+            return;
+        if (fname.size() >= 3 && fname.rfind(".gz") == (fname.size() - 3))
+            return;
+
+        for (const std::string &existing : names)
+        {
+            if (existing == fname)
+                return;
+        }
+        names.push_back(fname);
+    };
+
+    auto append_from_dir = [&append_entry_name, this](const char *dir_path)
+    {
+        File dir = LittleFS.open(dir_path);
+        if (!dir || !dir.isDirectory())
+        {
+            if (debugLogger)
+                debugLogger->info((std::string("AmakerBot:listScripts open failed or not dir: ") + dir_path).c_str());
+            if (dir)
+                dir.close();
+            return;
+        }
+
+        if (debugLogger)
+            debugLogger->info((std::string("AmakerBot:listScripts enumerate dir: ") + dir_path).c_str());
+
+    {
+        File entry = dir.openNextFile();
+        while (entry)
+        {
+            if (!entry.isDirectory())
+            {
+                    append_entry_name(entry.name(), nullptr);
+            }
+            entry.close();
+            entry = dir.openNextFile();
+        }
+        }
+        dir.close();
+    };
+
+    auto append_from_manifest = [&append_entry_name, this](const char *index_path)
+    {
+        File idx = LittleFS.open(index_path, "r");
+        if (!idx || idx.isDirectory())
+        {
+            if (idx)
+                idx.close();
+            if (debugLogger)
+                debugLogger->info((std::string("AmakerBot:listScripts manifest missing: ") + index_path).c_str());
+            return;
+        }
+
+        if (debugLogger)
+            debugLogger->info((std::string("AmakerBot:listScripts read manifest: ") + index_path).c_str());
+
+        std::string line;
+        line.reserve(96);
+        while (idx.available())
+        {
+            const int ch = idx.read();
+            if (ch < 0)
+                break;
+            if (ch == '\r')
+                continue;
+            if (ch == '\n')
+            {
+                if (!line.empty())
+                    append_entry_name(line, nullptr);
+                line.clear();
+                continue;
+            }
+            line.push_back(static_cast<char>(ch));
+        }
+        if (!line.empty())
+            append_entry_name(line, nullptr);
+        idx.close();
+    };
+
+    // Deterministic path: read generated index first.
+    append_from_manifest(AmakerBotConsts::scripts_index);
+    append_from_manifest(AmakerBotConsts::scripts_index_alt);
+    if (!names.empty())
+    {
+        if (debugLogger)
+            debugLogger->info((std::string("AmakerBot:listScripts manifest-count=") +
+                               std::to_string(names.size())).c_str());
+        return names;
+    }
+
+    // Prefer direct directory iteration when available.
+    if (debugLogger)
+        debugLogger->info((std::string("AmakerBot:listScripts probe ") + AmakerBotConsts::scripts_dir +
+                           " exists=" + (LittleFS.exists(AmakerBotConsts::scripts_dir) ? "1" : "0")).c_str());
+    append_from_dir(AmakerBotConsts::scripts_dir);
+    append_from_dir("/scripts/");
+
+    if (debugLogger)
+        debugLogger->info((std::string("AmakerBot:listScripts probe ") + AmakerBotConsts::scripts_dir_alt +
+                           " exists=" + (LittleFS.exists(AmakerBotConsts::scripts_dir_alt) ? "1" : "0")).c_str());
+    append_from_dir(AmakerBotConsts::scripts_dir_alt);
+    append_from_dir("/data/scripts/");
+
+    if (debugLogger)
+        debugLogger->info((std::string("AmakerBot:listScripts direct-count=") +
+                           std::to_string(names.size())).c_str());
+
+    if (!names.empty())
+    {
+        if (debugLogger)
+            debugLogger->info("AmakerBot:listScripts done (direct scan)");
+        return names;
+    }
+
+    // Fallback for FS variants where directory iteration is limited.
+    File root = LittleFS.open("/");
+    if (!root || !root.isDirectory())
+    {
+        if (debugLogger)
+            debugLogger->error("AmakerBot:listScripts root open failed");
+        return names;
+    }
+
+    File entry = root.openNextFile();
     while (entry)
     {
+        const std::string full = entry.name();
+        if (debugLogger)
+            debugLogger->info((std::string("AmakerBot:listScripts root entry=") +
+                               full + " dir=" + (entry.isDirectory() ? "1" : "0")).c_str());
         if (!entry.isDirectory())
         {
-            // name() may return "/scripts/foo.js" or just "foo.js" depending
-            // on the ESP32 core version — strip everything up to the last '/'
-            std::string full = entry.name();
-            const size_t slash = full.rfind('/');
-            const std::string fname = (slash != std::string::npos)
-                                      ? full.substr(slash + 1)
-                                      : full;
-            if (!fname.empty())
-                names.push_back(fname);
+            append_entry_name(full, "/scripts/");
+            append_entry_name(full, "scripts/");
+            append_entry_name(full, "/data/scripts/");
+            append_entry_name(full, "data/scripts/");
+        }
+        else
+        {
+            // Some cores expose directories via root iteration but do not
+            // enumerate when reopened by path. Enumerate via the discovered handle.
+            if (full == "/scripts" || full == "/scripts/")
+            {
+                if (debugLogger)
+                    debugLogger->info("AmakerBot:listScripts fallback enumerate root entry /scripts");
+
+                File script_entry = entry.openNextFile();
+                while (script_entry)
+                {
+                    if (!script_entry.isDirectory())
+                        append_entry_name(script_entry.name(), "/scripts/");
+                    script_entry.close();
+                    script_entry = entry.openNextFile();
+                }
+            }
+            else if (full == "/data" || full == "/data/")
+            {
+                // Try nested /data/scripts if present.
+                File data_entry = entry.openNextFile();
+                while (data_entry)
+                {
+                    const std::string data_name = data_entry.name();
+                    if (data_entry.isDirectory() && (data_name == "/data/scripts" || data_name == "/data/scripts/"))
+                    {
+                        if (debugLogger)
+                            debugLogger->info("AmakerBot:listScripts fallback enumerate root entry /data/scripts");
+
+                        File script_entry = data_entry.openNextFile();
+                        while (script_entry)
+                        {
+                            if (!script_entry.isDirectory())
+                                append_entry_name(script_entry.name(), "/data/scripts/");
+                            script_entry.close();
+                            script_entry = data_entry.openNextFile();
+                        }
+                    }
+                    data_entry.close();
+                    data_entry = entry.openNextFile();
+                }
+            }
         }
         entry.close();
-        entry = dir.openNextFile();
+        entry = root.openNextFile();
     }
-    dir.close();
+    root.close();
+
+    if (debugLogger)
+    {
+        debugLogger->info((std::string("AmakerBot:listScripts fallback-count=") +
+                           std::to_string(names.size())).c_str());
+        for (const std::string &n : names)
+            debugLogger->info((std::string("AmakerBot:listScripts file=") + n).c_str());
+    }
+
     return names;
 }
 
@@ -631,7 +822,18 @@ std::string AmakerBotService::getScript(const std::string &name)
     }
 
     const std::string path = std::string(AmakerBotConsts::scripts_dir) + "/" + name;
+    const std::string alt_path = std::string(AmakerBotConsts::scripts_dir_alt) + "/" + name;
+    if (debugLogger)
+        debugLogger->info(("AmakerBot:getScript try " + path).c_str());
     File f = LittleFS.open(path.c_str(), "r");
+    if (!f || f.isDirectory())
+    {
+        if (f)
+            f.close();
+        if (debugLogger)
+            debugLogger->info(("AmakerBot:getScript fallback try " + alt_path).c_str());
+        f = LittleFS.open(alt_path.c_str(), "r");
+    }
     if (!f || f.isDirectory())
     {
         if (debugLogger)
@@ -718,5 +920,15 @@ bool AmakerBotService::scriptExists(const std::string &name)
     if (!isValidScriptName(name))
         return false;
     const std::string path = std::string(AmakerBotConsts::scripts_dir) + "/" + name;
-    return LittleFS.exists(path.c_str());
+    if (LittleFS.exists(path.c_str()))
+    {
+        if (debugLogger)
+            debugLogger->info(("AmakerBot:scriptExists hit " + path).c_str());
+        return true;
+    }
+    const std::string alt_path = std::string(AmakerBotConsts::scripts_dir_alt) + "/" + name;
+    const bool found_alt = LittleFS.exists(alt_path.c_str());
+    if (debugLogger && found_alt)
+        debugLogger->info(("AmakerBot:scriptExists hit " + alt_path).c_str());
+    return found_alt;
 }

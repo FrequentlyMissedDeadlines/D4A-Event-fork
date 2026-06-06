@@ -13,7 +13,9 @@ You should have received:
 * 1 extension board, with a battery holder, lots of pins, **power switch** and **USB connector** for battery charging.
 ![DFR1216Board.svg](DFR1216Board.svg)
 * 1 battery 18650 (loaded). **Be extremely carefull with polarity when plugin the battery**
-* 1 set of lego bricks with plates, wheels, axles, tracks, gears. ![Bill%20of%20material%20pieces.jpg](Bill%20of%20material%20pieces.jpg) ~[book_chapters.png](book_chapters.png)
+* 1 set of lego bricks with plates, wheels, axles, tracks, gears. !
+<img src="Bill%20of%20material%20pieces%201.png" alt="bricks 1/2" width="600"/><br><img src="Bill%20of%20material%20pieces%202.png" alt="bricks 2/2" width="600"/><br>
+* bonus gears set
 * 2 servo motors : green ones 
 ![svgreen64.png](svgreen64.png)
 * 2 angular servos : grey  ones ![svgrey64.png](svgrey64.png)
@@ -102,7 +104,8 @@ You balloon has to be fairly mounted in a location that can be accessed to other
 - Use the USB-c connector to charge the battery
 - Let the power switch accessible
 - Be iterative
-- If you lack ideas, have a look at the book [The LEGO power functions idea book., Isogawa, Yoshihito](https://archive.org/details/legopowerfunctio0000isog_f2e0/page/4/mode/2up) : there are lots of ideas ![d4a-contest-guide-ideas.png](d4a-contest-guide-ideas.png).
+- **If you lack ideas, have a look at the *book [The LEGO power functions idea book., Isogawa, Yoshihito](https://archive.org/details/legopowerfunctio0000isog_f2e0/page/4/mode/2up)** : there are lots of ideas 
+<img src="d4a-contest-guide-ideas.png" alt="bricks 2/2" width="600"/>!
 
 ## Coding part
 
@@ -114,21 +117,21 @@ The microcontroller is provided with a custom firmware for the contest.
 On first boot, if no known WiFi is accessible, board will open its own access point `amaker-XXXXX` and show its name on screen. Connect to it using password `amaker-club`.
 Once connected, open page [http://192.168.4.1](http://192.168.4.1)
 
-The home page allows to configure a "public" WiFi access point to use:
+Optional : the home page allows to configure a "public" WiFi access point to use.
 - set master token (it's present on screen), click register
 - define WiFi SSID and password and save.
 - reboot to start using this WiFi network.
 
 #### Website (port 80)
 The microcontroller exposes a website on port 80.
-It exposes the Wifi setup page, the camera view page, a the online javascript controller coding page.
+It exposes the Wifi `setup` page, the `camera` view page, a the `online javascript controller coding` page.
 
 #### WebSocket (port 81)
-The microcontroller exposes a website on port 81.
-Only for 
+The microcontroller exposes the `websocket service on port 81`.
+
 
 #### UDP (port 24642)
-The microcontroller exposes a UDP service on port 24642.
+The microcontroller exposes the `UDP service on port 24642`.
 
 ### Coding your controller
 
@@ -140,5 +143,4 @@ You can code your own controller with your own code that will interact via  webs
 No example but but the online javascript. Documentation of service is provided.
 
 #### Code your own firmware 
-You can code your own firmware using VisualStudio and PlatformIO, but you'd better forget about cloning the code repo a starting this.
-
+Trust me: you don't want to do that :)

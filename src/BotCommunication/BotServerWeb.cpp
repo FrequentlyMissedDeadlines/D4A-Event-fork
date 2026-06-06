@@ -535,7 +535,7 @@ bool BotServerWeb::start()
     server_->on("/", HTTP_GET, [this](AsyncWebServerRequest *request)   
     {
         logHttpRequest(logger_, request);
-        request->redirect(FPSTR(BotServerWebConsts::default_file));
+        request->redirect(FPSTR(BotServerWebConsts::root_redirect_target));
     });
 
     server_->onNotFound([this](AsyncWebServerRequest *request)
