@@ -128,9 +128,9 @@ bool WifiService::open_access_point()
 
     if (debugLogger)
     {
-        debugLogger->info(std::string("AP SSID: ") + full_ap_ssid);
-        debugLogger->info(std::string("Hostname: ") + getHostname());
-        debugLogger->info(std::string("AP channel: ") + std::to_string(WiFiConsts::default_ap_channel));
+        debugLogger->info(std::string("AP SSID: ") + full_ap_ssid, "wifi" );
+        debugLogger->info(std::string("Hostname: ") + getHostname(), "wifi");
+        debugLogger->info(std::string("AP channel: ") + std::to_string(WiFiConsts::default_ap_channel), "wifi");
     }
 
     WiFi.disconnect(true);
@@ -145,7 +145,7 @@ bool WifiService::open_access_point()
                      WiFiConsts::default_ap_channel))
     {
         if (debugLogger)
-            debugLogger->error(FPSTR(WiFiConsts::msg_ap_failed) + full_ap_ssid);
+            debugLogger->error(FPSTR(WiFiConsts::msg_ap_failed) + full_ap_ssid, "wifi");
         return false;
     }
 
@@ -154,7 +154,7 @@ bool WifiService::open_access_point()
 
     if (debugLogger)
         debugLogger->warning(FPSTR(WiFiConsts::msg_ap_created) + full_ap_ssid
-                        + " " + connected_ip_);
+                        + " " + connected_ip_, "wifi");
     return true;
 }
 
@@ -189,7 +189,7 @@ bool WifiService::connect_to_wifi(const std::string &ssid,
     WiFi.begin(ssid.c_str(), password.c_str());
 
     if (debugLogger)
-        debugLogger->info(FPSTR(WiFiConsts::msg_connecting_to) + ssid);
+        debugLogger->info(FPSTR(WiFiConsts::msg_connecting_to) + ssid, "wifi");
 
     for (int i = 0; i < WiFiConsts::wifi_conn_max_attempts && WiFi.status() != WL_CONNECTED; ++i)
     {
@@ -197,7 +197,7 @@ bool WifiService::connect_to_wifi(const std::string &ssid,
             debugLogger->info(FPSTR(WiFiConsts::msg_attempt)
                          + std::to_string(i + 1)
                          + std::string("/")
-                         + std::to_string(WiFiConsts::wifi_conn_max_attempts));
+                         + std::to_string(WiFiConsts::wifi_conn_max_attempts), "wifi");
         delay(WiFiConsts::wifi_conn_sleep_ms);
     }
 
@@ -206,12 +206,12 @@ bool WifiService::connect_to_wifi(const std::string &ssid,
         connected_ip_   = WiFi.localIP().toString().c_str();
         connected_ssid_ = ssid;
         if (debugLogger)
-            debugLogger->info(FPSTR(WiFiConsts::msg_connected) + ssid + " " + connected_ip_);
+            debugLogger->info(FPSTR(WiFiConsts::msg_connected) + ssid + " " + connected_ip_, "wifi");
         return true;
     }
 
     if (debugLogger)
-        debugLogger->error(FPSTR(WiFiConsts::msg_failed_connect) + ssid);
+        debugLogger->error(FPSTR(WiFiConsts::msg_failed_connect) + ssid, "wifi");
     return false;
 }
 
@@ -239,11 +239,11 @@ bool WifiService::connect_and_fallback(const std::string &ssid,
                                        const std::string &password)
 {
     if (debugLogger)
-        debugLogger->info(FPSTR(WiFiConsts::msg_activation));
+        debugLogger->info(FPSTR(WiFiConsts::msg_activation), "wifi");
 
     if (connect_to_wifi(ssid, password))
         return true;
-    if(serviceLogger) serviceLogger->warning(FPSTR(WiFiConsts::msg_fallback_ap));
+    if(serviceLogger) serviceLogger->warning(FPSTR(WiFiConsts::msg_fallback_ap), "wifi");
 
     return open_access_point();
 }
@@ -272,7 +272,7 @@ bool WifiService::initializeService()
     setServiceStatus(INITIALIZED);
 #ifdef VERBOSE_DEBUG
     if (debugLogger)
-        debugLogger->debug(getServiceName() + " " + getStatusString());
+        debugLogger->debug(getServiceName() + " " + getStatusString(), "wifi");
 #endif
     return true;
 }
@@ -285,7 +285,7 @@ bool WifiService::startService()
 {
 #ifdef VERBOSE_DEBUG
     if (debugLogger)
-        debugLogger->info(FPSTR(WiFiConsts::msg_starting));
+        debugLogger->info(FPSTR(WiFiConsts::msg_starting),"wifi");
 #endif
 
     const bool ok = connect_and_fallback(wifi_ssid_, wifi_password_);
@@ -300,7 +300,7 @@ bool WifiService::startService()
 
 #ifdef VERBOSE_DEBUG
     if (debugLogger)
-        debugLogger->debug(getServiceName() + " " + getStatusString());
+        debugLogger->debug(getServiceName() + " " + getStatusString(), "wifi");
 #endif
     return ok;
 }
@@ -315,7 +315,7 @@ bool WifiService::stopService()
     setServiceStatus(ok ? STOPPED : STOP_FAILED);
 #ifdef VERBOSE_DEBUG
     if (debugLogger)
-        debugLogger->debug(getServiceName() + " " + getStatusString());
+        debugLogger->debug(getServiceName() + " " + getStatusString(), "wifi");
 #endif
     return ok;
 }
@@ -330,7 +330,7 @@ bool WifiService::saveSettings()
     if (!prefs.begin(WiFiConsts::nvs_namespace, /* readOnly= */ false))
     {
         if (debugLogger)
-            debugLogger->error(FPSTR(WiFiConsts::msg_prefs_open_fail));
+            debugLogger->error(FPSTR(WiFiConsts::msg_prefs_open_fail), "wifi");
         return false;
     }
 
@@ -342,7 +342,7 @@ bool WifiService::saveSettings()
     prefs.end();
 
     if (debugLogger)
-        debugLogger->info(FPSTR(WiFiConsts::msg_settings_saved));
+        debugLogger->info(FPSTR(WiFiConsts::msg_settings_saved), "wifi");
     return true;
 }
 
@@ -369,9 +369,9 @@ bool WifiService::loadSettings()
     if (debugLogger)
     {
         debugLogger->info(FPSTR(WiFiConsts::msg_settings_loaded));
-        debugLogger->info(std::string("- STA SSID: ")  + wifi_ssid_);
-        debugLogger->info(std::string("- AP  SSID: ")  + ap_ssid_ + mac_suffix_);
-        debugLogger->info(std::string("- Hostname: ")  + getHostname());
+        debugLogger->info(std::string("- STA SSID: ")  + wifi_ssid_, "wifi");
+        debugLogger->info(std::string("- AP  SSID: ")  + ap_ssid_ + mac_suffix_, "wifi");
+        debugLogger->info(std::string("- Hostname: ")  + getHostname(), "wifi");
     }
     return true;
 }
@@ -430,7 +430,7 @@ bool WifiService::resetSettings()
     hostname_      = WiFiConsts::default_hostname;
 
     if (debugLogger)
-        debugLogger->info(FPSTR(WiFiConsts::msg_settings_reset));
+        debugLogger->info(FPSTR(WiFiConsts::msg_settings_reset), "wifi");
     return true;
 }
 

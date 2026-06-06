@@ -98,7 +98,7 @@ bool AmakerBotUIService::startService()
     tft.fillScreen(UIColors::CLR_BLACK);
 
     setServiceStatus(STARTED);
-    debugLogger->info(getServiceName() + " " + FPSTR(ServiceConst::msg_start_ok));
+    debugLogger->info(getServiceName() + " " + FPSTR(ServiceConst::msg_start_ok),"UI");
     return true;
 }
 

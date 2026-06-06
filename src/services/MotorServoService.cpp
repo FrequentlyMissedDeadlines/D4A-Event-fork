@@ -36,13 +36,6 @@ bool MotorServoService::initializeService()
     memset(servo_angles_, 0, sizeof(servo_angles_));
     for (uint8_t i = 0; i < MotorServoConsts::SERVO_COUNT; ++i)
         servo_types_[i] = ServoType::SERVO_180;
-    if (board.getStatus() != STARTED)
-    {
-        setServiceStatus(INITIALIZED_FAILED);
-        if (debugLogger)
-            debugLogger->error(progmem_to_string(MotorServoConsts::msg_board_not_started).c_str());
-        return false;
-    }
     setServiceStatus(INITIALIZED);
     if (debugLogger)
         debugLogger->info(getServiceName() + " " + FPSTR(ServiceConst::msg_init_ok));
@@ -51,6 +44,14 @@ bool MotorServoService::initializeService()
 
 bool MotorServoService::startService()
 {
+    if (board.getStatus() != STARTED)
+    {
+        setServiceStatus(START_FAILED);
+        if (debugLogger)
+            debugLogger->error(progmem_to_string(MotorServoConsts::msg_board_not_started).c_str());
+        return false;
+    }
+
     setServiceStatus(STARTED);
     if (debugLogger)
         debugLogger->info(getServiceName() + " " + FPSTR(ServiceConst::msg_start_ok));

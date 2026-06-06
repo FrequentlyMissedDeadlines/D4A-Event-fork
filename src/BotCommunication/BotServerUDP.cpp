@@ -68,7 +68,7 @@ bool BotServerUDP::start()
 
     if (logger_)
         logger_->info(fpstr_to_string(FPSTR(BotServerUDPConsts::msg_start_ok))
-                      + std::to_string(port_));
+                      + std::to_string(port_), "UDP");
     return true;
 }
 

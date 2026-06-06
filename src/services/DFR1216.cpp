@@ -102,6 +102,8 @@ bool DFR1216Board::initializeService()
     if (!begin())
     {
         setServiceStatus(INITIALIZED_FAILED);
+        if (debugLogger)
+            debugLogger->error("DFR1216 init failed: I2C probe failed (tried 0x33 and 0x10)");
         debugLogger->error(getServiceName() + " " + getStatusString());
         return false;
     }
@@ -716,38 +718,61 @@ DFR1216_I2C::DFR1216_I2C(TwoWire *pWire, uint8_t addr)
 }
 
 bool DFR1216_I2C::begin()
-{   debugLogger->info("Initializing DFR1216 I2C communication");
+{   if (debugLogger)
+        debugLogger->info("Initializing DFR1216 I2C communication");
     if (!__i2c_mutex)
         __i2c_mutex = xSemaphoreCreateRecursiveMutex();
-    debugLogger->info("I2C mutex created");
+    if (debugLogger)
+        debugLogger->info("I2C mutex created");
     uint8_t retry    = 0;
     uint8_t tempData = DATA_ENABLE;
 
     __pWire->begin();
-    debugLogger->info("I2C bus started");
+    if (debugLogger)
+        debugLogger->info("I2C bus started");
     __pWire->setClock(400000);
-    __pWire->beginTransmission(__I2C_addr);
+
+    const uint8_t candidate_addresses[] = {__I2C_addr, 0x10, 0x33};
+    bool address_found = false;
+    for (uint8_t candidate : candidate_addresses)
+    {
+        if (address_found)
+            break;
+
+        __pWire->beginTransmission(candidate);
+        if (__pWire->endTransmission() == 0)
+        {
+            __I2C_addr = candidate;
+            address_found = true;
+        }
+    }
+
     char addr_buf[32];
     snprintf(addr_buf, sizeof(addr_buf), "Checking I2C device presence at address 0x%02X", __I2C_addr);
-    debugLogger->info(addr_buf);
-    if (__pWire->endTransmission() != 0) {
-        debugLogger->error("I2C device not responding ");
+    if (debugLogger)
+        debugLogger->info(addr_buf);
+    if (!address_found) {
+        if (debugLogger)
+            debugLogger->error("I2C probe failed: no response at 0x33 or 0x10");
         return false;
     }
 
     // Reset all sensors on the board
     writeReg(I2C_RESET_SENSOR, &tempData, 1);
-    debugLogger->info("Sent sensor reset command");
+    if (debugLogger)
+        debugLogger->info("Sent sensor reset command");
     delay(20);
 
     while (true)
     {
         __pWire->beginTransmission(__I2C_addr);
         if (__pWire->endTransmission() == 0) {
-            debugLogger->info("I2C device is responsive");
+            if (debugLogger)
+                debugLogger->info("I2C device is responsive");
             return true;}
         if (++retry > 100) {
-            debugLogger->error("I2C device not responding after 100 retries");
+            if (debugLogger)
+                debugLogger->error("I2C device not responding after 100 retries");
             return false; }
         delay(10);
     }

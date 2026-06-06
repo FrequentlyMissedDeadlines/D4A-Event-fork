@@ -630,7 +630,7 @@ bool BotServerWeb::start()
 
     if (logger_)
         logger_->info(fpstr_to_string(FPSTR(BotServerWebConsts::msg_start_ok))
-                      + std::to_string(port_));
+                      + std::to_string(port_),"WWW");
     return true;
 }
 

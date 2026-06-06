@@ -47,7 +47,7 @@ bool BotServerWebSocket::start()
 
     if (logger_)
         logger_->info(String(FPSTR(BotServerWSConsts::msg_start_ok)).c_str()
-                      + std::to_string(port_));
+                      + std::to_string(port_),"WS");
     return true;
 }
 

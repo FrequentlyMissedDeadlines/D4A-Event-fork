@@ -73,7 +73,7 @@ bool BotServerBLE::start()
 
     if (logger_)
         logger_->info(fpstr_to_string(FPSTR(BotServerBLEConsts::msg_start_ok))
-                      + device_name_);
+                      + device_name_,"BLE");
     return true;
 }
 
