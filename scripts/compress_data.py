@@ -20,6 +20,8 @@ SCRIPTS_MANIFEST = os.path.join(SCRIPTS_DIR, "index.txt")
 LEGACY_SCRIPTS_MANIFEST = os.path.join(SCRIPTS_DIR, ".index")
 TMP_BACKUP_DIR = os.path.join(env["PROJECT_DIR"], ".pio", "tmp", "compress_data_backup")  # noqa: F821
 OPTIONAL_PRUNE_DIRS = [
+]
+EXCLUDED_DIRS = [
     os.path.join(DATA_DIR, "www", "help"),
 ]
 
@@ -124,6 +126,12 @@ def compress_assets(source, target, env):  # noqa: F821
     replaced = 0
 
     for root, _dirs, files in os.walk(DATA_DIR):
+        # Never modify excluded trees (e.g. documentation sources in /www/help).
+        _dirs[:] = [
+            d for d in _dirs
+            if os.path.join(root, d) not in EXCLUDED_DIRS
+        ]
+
         rel_root = os.path.relpath(root, DATA_DIR)
         in_scripts_dir = rel_root == "scripts" or rel_root.startswith("scripts" + os.sep)
 

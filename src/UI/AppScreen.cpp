@@ -215,7 +215,7 @@ void AppScreen::drawInfoPanel(bool chrome_only)
 
 
                 char tbuf[39];
-        snprintf(tbuf, sizeof(tbuf), "%-16s", "aMaker Bot"                );
+        snprintf(tbuf, sizeof(tbuf), "%-16s", "Bricks Browl"                );
         tft.setCursor(x0 + cw, y0 + lh);
         tft.print(tbuf);
 
@@ -259,7 +259,7 @@ void AppScreen::drawInfoPanel(bool chrome_only)
         colorsForStatus(amakerbot_.getStatus(), fg, bg);
         tft.setTextColor(fg, bg);
         char tbuf[39];
-        snprintf(tbuf, sizeof(tbuf), "%-16s % 20s ", "aMaker Bot",
+        snprintf(tbuf, sizeof(tbuf), "%-16s % 20s ", "D4A",
                  amakerbot_.getBotName().substr(0, 20).c_str());
         tft.setCursor(x0 + cw, y0 + lh);
         tft.print(tbuf);
@@ -281,13 +281,12 @@ void AppScreen::drawInfoPanel(bool chrome_only)
         
         if (master_ip.empty())
         {
- 
+             tft.setTextColor(UIColors::CLR_LINES_HIGHLIGHT_COLOR, UIColors::CLR_STATUS_DEFAULT_BG);
             const std::string prompt = "REG: " + token;
             snprintf(vbuf, sizeof(vbuf), "%-21s", prompt.substr(0, 21).c_str());
         }
         else
         {
-
             snprintf(vbuf, sizeof(vbuf), "%-21s", master_ip.substr(0, 21).c_str());
         }
 

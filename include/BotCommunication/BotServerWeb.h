@@ -63,8 +63,9 @@ namespace BotServerWebConsts
 {
     constexpr const char str_service_name[]   PROGMEM = "BotServerWeb";
     constexpr const char path_botserver[]     PROGMEM = "/botserver";
-    constexpr const char path_echo[]          PROGMEM = "/echo";
-    constexpr const char path_fsprobe[]       PROGMEM = "/fsprobe";
+    constexpr const char path_echo[]          PROGMEM = "/api/echo";
+    constexpr const char path_fsprobe[]       PROGMEM = "/api/fsprobe";
+    constexpr const char path_logs_api[]      PROGMEM = "/api/logs";
     constexpr const char path_buildinfo_api[] PROGMEM = "/api/buildinfo.json";
     constexpr const char param_cmd[]          PROGMEM = "cmd";
     constexpr const char mime_octet[]         PROGMEM = "application/octet-stream";
@@ -226,6 +227,14 @@ private:
      * and served as the static file `/buildinfo.json`.
      */
     void registerBuildInfoRoute();
+
+    /**
+     * @brief Register GET /api/logs route.
+     *
+     * Returns RollingLogger entries as JSON. If no logger is attached,
+     * responds with an empty entries list.
+     */
+    void registerLogsRoute();
 
     /**
      * @brief Decode a hex string into a binary std::string.

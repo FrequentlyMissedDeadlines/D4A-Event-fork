@@ -49,7 +49,7 @@ namespace WiFiConsts
     constexpr const char msg_starting[]         PROGMEM = "Starting WiFi service...";
     constexpr const char msg_activation[]       PROGMEM = "Activating WiFi.";
     constexpr const char msg_connecting_to[]    PROGMEM = "Connecting to ";
-    constexpr const char msg_attempt[]          PROGMEM = " attempt #";
+    constexpr const char msg_attempt[]          PROGMEM = "attempt ";
     constexpr const char msg_connected[]        PROGMEM = "WiFi STA: ";
     constexpr const char msg_failed_connect[]   PROGMEM = "Failed to connect: ";
     constexpr const char msg_fallback_ap[]      PROGMEM = "Falling back to AP mode.";

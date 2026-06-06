@@ -50,6 +50,7 @@ namespace UIColors
     constexpr uint16_t CLR_STATUS_DEFAULT_FG  = CLR_WHITE;
     constexpr uint16_t CLR_STATUS_DEFAULT_BG  = CLR_BLACK;
     constexpr uint16_t CLR_LINES_COLOR  = CLR_LIGHTGREY;
+    constexpr uint16_t CLR_LINES_HIGHLIGHT_COLOR  = CLR_YELLOW;
     // Content / decoration colours
     constexpr uint16_t CLR_INFO  = CLR_CYAN;
     constexpr uint16_t CLR_TITLE = CLR_CYAN;

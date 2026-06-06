@@ -434,6 +434,78 @@ void BotServerWeb::registerBuildInfoRoute()
 }
 
 // ---------------------------------------------------------------------------
+// registerLogsRoute
+// ---------------------------------------------------------------------------
+
+void BotServerWeb::registerLogsRoute()
+{
+    server_->on(BotServerWebConsts::path_logs_api, HTTP_GET,
+        [this](AsyncWebServerRequest *request)
+        {
+            logHttpRequest(logger_, request);
+
+            std::vector<RollingLogger::LogEntry> rows;
+            unsigned long version = 0;
+            int max_rows = 0;
+            int level = static_cast<int>(RollingLogger::INFO);
+
+            if (logger_)
+            {
+                rows = logger_->get_log_rows();
+                version = logger_->get_version();
+                max_rows = logger_->get_max_rows();
+                level = static_cast<int>(logger_->get_log_level());
+            }
+
+            std::string json;
+            json.reserve(128 + rows.size() * 120);
+
+            json += '{';
+            json += "\"version\":";
+            json += std::to_string(version);
+            json += ",\"level\":";
+            json += std::to_string(level);
+            json += ",\"max_rows\":";
+            json += std::to_string(max_rows);
+            json += ",\"entries\":[";
+
+            for (size_t i = 0; i < rows.size(); ++i)
+            {
+                if (i > 0)
+                    json += ',';
+
+                const RollingLogger::LogEntry &entry = rows[i];
+                json += '{';
+                json += "\"timestamp_ms\":";
+                json += std::to_string(entry.timestamp_ms);
+                json += ",\"level\":";
+                json += std::to_string(static_cast<int>(entry.level));
+                json += ",\"source\":\"";
+                json += jsonEscape(entry.source);
+                json += "\",\"message\":\"";
+                json += jsonEscape(entry.message);
+                json += "\"}";
+            }
+
+            json += "]}";
+
+            auto payload = std::make_shared<std::string>(std::move(json));
+            AsyncWebServerResponse *resp = beginOwnedResponse(
+                request,
+                reinterpret_cast<const char *>(FPSTR(BotServerWebConsts::mime_json)),
+                payload);
+            if (!resp)
+            {
+                request->send(500, FPSTR(BotServerWebConsts::mime_text), "OOM");
+                return;
+            }
+            resp->addHeader("Cache-Control",
+                            FPSTR(BotServerWebConsts::cache_control_no_store));
+            request->send(resp);
+        });
+}
+
+// ---------------------------------------------------------------------------
 // start
 // ---------------------------------------------------------------------------
 
@@ -463,6 +535,7 @@ bool BotServerWeb::start()
 
     register_get_botserver();
     registerBuildInfoRoute();
+    registerLogsRoute();
     registerScriptRoutes();
     registerLoggedStaticRoute(server_,
                               logger_,

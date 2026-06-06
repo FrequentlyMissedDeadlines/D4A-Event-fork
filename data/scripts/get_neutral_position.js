@@ -4,6 +4,20 @@
 //   1     -> angular servos to minimum angle, rotational servos to max negative speed
 //   9     -> angular servos to maximum angle, rotational servos to max positive speed
 
+
+// *********************************************************************************
+// ** IMPORTANT: UPDATE THE BOT CONTROL LINE BELOW WITH YOUR BOT'S IP AND TOKEN ! **
+// *********************************************************************************
+const BOT_IP = '192.168.4.1';
+const BOT_PORT = '81';
+const BOT_TOKEN = 'YOUR BOT TOKEN HERE';
+  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
+  if (!connected) {
+    alert('❌ Could not connect to bot. Check IP and token.');
+    return;
+  }
+
+
 // Configure your servo connection pins here.
 const ANGULAR_SERVO_PINS = [2, 3];
 const ROTATIONAL_SERVO_PINS = [0, 1];
@@ -12,7 +26,10 @@ const ROTATIONAL_SERVO_PINS = [0, 1];
 const ANGULAR_SERVO_TYPE = SERVO_TYPES.ANGULAR_270;
 const ANGULAR_MIN_ANGLE = -135;
 const ANGULAR_ZERO_ANGLE = 0;
-const ANGULAR_MAX_ANGLE = 135;
+const ANGULAR_MAX_ANGLE = 135;// ─────────────────────────────────────────────────────────────────────────────
+// get control of bot (replace with your bot's IP, port, and token) 
+// ─────────────────────────────────────────────────────────────────────────────
+getBotControl('192.168.4.1', '81', '00000');
 
 const ROTATIONAL_MAX_NEGATIVE_SPEED = -100;
 const ROTATIONAL_STOP_SPEED = 0;

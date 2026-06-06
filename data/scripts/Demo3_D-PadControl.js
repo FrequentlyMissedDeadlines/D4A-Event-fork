@@ -1,6 +1,19 @@
 // Template 3: Simple D-Pad Movement
 // Use this for basic forward/back/left/right control with the gamepad D-Pad.
 
+
+// *********************************************************************************
+// ** IMPORTANT: UPDATE THE BOT CONTROL LINE BELOW WITH YOUR BOT'S IP AND TOKEN ! **
+// *********************************************************************************
+const BOT_IP = '192.168.4.1';
+const BOT_PORT = '81';
+const BOT_TOKEN = 'YOUR BOT TOKEN HERE';
+  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
+  if (!connected) {
+    alert('❌ Could not connect to bot. Check IP and token.');
+    return;
+  }
+
 const LEFT_WHEEL = 0;
 const RIGHT_WHEEL = 1;
 

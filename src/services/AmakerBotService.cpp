@@ -21,7 +21,7 @@
 namespace AmakerBotConsts
 {   
     constexpr const char str_service_name[]     PROGMEM = "AmakerBot Service";
-    constexpr const char default_bot_name[]     PROGMEM = "K10-Bot";
+    constexpr const char default_bot_name[]     PROGMEM = "Bricks Browl Bot";
     constexpr const char msg_registered[]          PROGMEM = "Master registered: ";
     constexpr const char msg_already_registered[]  PROGMEM = "Master already registered: ";
     constexpr const char msg_unregistered[]        PROGMEM = "Master unregistered: ";

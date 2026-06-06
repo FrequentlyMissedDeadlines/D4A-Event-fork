@@ -7,10 +7,21 @@
 //   CH 2  Arm        (angular 270°, grey servo)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
-// get control of bot (replace with your bot's IP, port, and token) 
-// ─────────────────────────────────────────────────────────────────────────────
-getBotControl('192.168.4.1', '81', '00000');
+
+
+// *********************************************************************************
+// ** IMPORTANT: UPDATE THE BOT CONTROL LINE BELOW WITH YOUR BOT'S IP AND TOKEN ! **
+// *********************************************************************************
+const BOT_IP = '192.168.4.1';
+const BOT_PORT = '81';
+const BOT_TOKEN = 'YOUR BOT TOKEN HERE';
+  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
+  if (!connected) {
+    alert('❌ Could not connect to bot. Check IP and token.');
+    return;
+  }
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────────────────────────
