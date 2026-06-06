@@ -2,7 +2,7 @@ Demo1_KeyboardControl.js
 Demo2_AnalogStickControl.js
 Demo3_D-PadControl.js
 Demo4_MoreComplex.js
-get_neutral_position.js
 index.txt
 joystick-control-robot-car.js
 keyboard-control-robot_tank.js
+ServoTester.js

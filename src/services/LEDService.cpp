@@ -13,6 +13,17 @@
 #include "FlashStringHelper.h"
 #include <cstring>
 
+namespace
+{
+    constexpr const char logger_source[] = "LED";
+}
+
+#define trace(message, ...) trace(message, logger_source)
+#define debug(message, ...) debug(message, logger_source)
+#define info(message, ...) info(message, logger_source)
+#define warning(message, ...) warning(message, logger_source)
+#define error(message, ...) error(message, logger_source)
+
 // ---------------------------------------------------------------------------
 // Constructor
 // ---------------------------------------------------------------------------

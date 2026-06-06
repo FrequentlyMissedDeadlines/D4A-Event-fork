@@ -11,6 +11,17 @@
 #include <cstdlib> // abs()
 #include <cstring> // memset()
 
+namespace
+{
+    constexpr const char logger_source[] = "MOTOR";
+}
+
+#define trace(message, ...) trace(message, logger_source)
+#define debug(message, ...) debug(message, logger_source)
+#define info(message, ...) info(message, logger_source)
+#define warning(message, ...) warning(message, logger_source)
+#define error(message, ...) error(message, logger_source)
+
 #define MOTOR_SERVO_SERVICE_DEBUG  // (un)comment to (dis)enable debug logging
 
 /// The DFR1216_I2C singleton is owned by DFR1216.cpp; reference it here.

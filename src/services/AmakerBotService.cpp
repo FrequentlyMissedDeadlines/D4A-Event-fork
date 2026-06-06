@@ -14,6 +14,17 @@
 #include <LittleFS.h>         // listScripts / getScript / saveScript / deleteScript
 #include <esp_efuse.h>        // esp_efuse_mac_get_default()
 
+namespace
+{
+    constexpr const char logger_source[] = "BOTSVC";
+}
+
+#define trace(message, ...) trace(message, logger_source)
+#define debug(message, ...) debug(message, logger_source)
+#define info(message, ...) info(message, logger_source)
+#define warning(message, ...) warning(message, logger_source)
+#define error(message, ...) error(message, logger_source)
+
 // ---------------------------------------------------------------------------
 // PROGMEM constants (translation-unit local)
 // ---------------------------------------------------------------------------

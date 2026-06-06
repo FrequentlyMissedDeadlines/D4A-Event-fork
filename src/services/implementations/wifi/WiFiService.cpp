@@ -19,6 +19,17 @@
 #include "FlashStringHelper.h"
 #include <Arduino.h>    // millis(), delay(), ESP
 
+namespace
+{
+    constexpr const char logger_source[] = "WIFI ";
+}
+
+#define trace(message, ...) trace(message, logger_source)
+#define debug(message, ...) debug(message, logger_source)
+#define info(message, ...) info(message, logger_source)
+#define warning(message, ...) warning(message, logger_source)
+#define error(message, ...) error(message, logger_source)
+
 #ifndef WIFI_AP_CHANNEL
 #define WIFI_AP_CHANNEL 1
 #endif

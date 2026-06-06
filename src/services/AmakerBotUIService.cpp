@@ -11,6 +11,17 @@
 #include "BotCommunication/BotServerUDP.h"
 #include <TFT_eSPI.h>
 
+namespace
+{
+    constexpr const char logger_source[] = "UI";
+}
+
+#define trace(message, ...) trace(message, logger_source)
+#define debug(message, ...) debug(message, logger_source)
+#define info(message, ...) info(message, logger_source)
+#define warning(message, ...) warning(message, logger_source)
+#define error(message, ...) error(message, logger_source)
+
 extern TFT_eSPI tft;
 
 // ---------------------------------------------------------------------------

@@ -181,7 +181,7 @@ void xtask_bot_transport(void * /*pvParameters*/)
   bot_over_websocket_.setPort(81);
   bot_over_websocket_.start();
 
-  debug_logger.info("BotTransport task ready (UDP:24642 WS:81) on core 0");
+  debug_logger.info("BotTransport task ready (UDP:24642 WS:81) on core 0","main");
 
   // Both servers are fully event-driven — no polling needed.
   for (;;) {
@@ -208,10 +208,10 @@ void xtask_web_server(void * /*pvParameters*/)
     bot_over_web_.registerCameraRoutes(cam_queue);
     debug_logger.info("Camera routes registered (/cam/snapshot, /cam/stream)");
   } else {
-    debug_logger.error("Camera queue allocation failed — camera routes not registered");
+    debug_logger.error("Camera queue allocation failed — camera routes not registered","main");
   }
 
-  debug_logger.info("WebServer task ready (HTTP:80) on core 1");
+  debug_logger.info("WebServer task ready (HTTP:80) on core 1","main");
 
   for (;;) {
     ui_service.tick();
@@ -283,8 +283,15 @@ void setup()
   // Initialize DFR1216 board as a full service before MotorServoService
   // (MotorServoService::initializeService() requires board.getStatus() == STARTED)
   start_service(board);
-  start_service(motor_servo_);
-  start_service(led_service_);
+  if (board.isServiceStarted())
+  {
+    start_service(motor_servo_);
+    start_service(led_service_);
+  }
+  else
+  {
+    bot_logger.warning("Skipping MotorServo and LED services because DFR1216 failed to start", "main");
+  }
   start_service(amaker_bot_);
 
   // Inject WifiService so AmakerBotService can handle CMD_GET/SET/RESET_WIFI
@@ -323,8 +330,7 @@ void setup()
 }
 
 /**
- * @brief Arduino main loop function
- * @details All application logic runs inside FreeRTOS tasks, this loop is empty
+ * @brief Arduino main loop function.
  */
 void loop()
 {
