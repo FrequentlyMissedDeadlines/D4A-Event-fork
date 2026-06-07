@@ -10,7 +10,7 @@ Press **Button A** (on the UniHiker K10 board) to cycle forward through all scre
 Navigation wraps from the last screen back to the first.  
 A 250 ms debounce prevents accidental double-presses.
 
-The same navigation is also available remotely from the web UI (**📝 Play** page → K10 Display section) or via binary protocol commands (see [binary-protocol.md](binary-protocol.md)).
+The same navigation is also available remotely from the web UI (**🎮 JS Play** page → K10 Display section) or via binary protocol commands (see [binary-protocol.md](binary-protocol.md)).
 
 ---
 

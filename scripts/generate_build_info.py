@@ -251,12 +251,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
   <nav class=\"topnav\">
-    <a href=\"./index.html\">🧠 Bot</a>
-    <a href=\"./camera.html\">📷 Cam</a>
-    <a href=\"./BotScript.html\">📝 Play</a>
-    <a href=\"./buildinfo.html\" class=\"active\">ℹ️ Build</a>
+    <a href=\"./index.html\"> 🛜 Wifi</a>
+    <a href=\"./camera.html\">📷 Live Cam</a>
+    <a href=\"./BotScript.html\">🎮 JS Play</a>
+    <a href=\"./buildinfo.html\" class=\"active\">🛠 Build infos</a>
   </nav>
-  <h1 id=\"pageTitle\">ℹ️ Build info <span id=\"titleStatus\" style=\"font-size:.6em;color:#ddd\">[loading]</span></h1>
+  <h1 id=\"pageTitle\">🛠 Build infos info <span id=\"titleStatus\" style=\"font-size:.6em;color:#ddd\">[loading]</span></h1>
     <div class=\"box\" id=\"summary\">Loading firmware and filesystem identities…</div>
   <div class=\"box\"><strong>Running firmware</strong><pre id=\"fw\" class=\"mono\">Loading…</pre></div>
     <div class=\"box\"><strong>Mounted filesystem package</strong><pre id=\"fs\" class=\"mono\">Loading…</pre></div>

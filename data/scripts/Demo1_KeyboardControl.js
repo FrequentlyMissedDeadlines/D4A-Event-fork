@@ -1,32 +1,29 @@
-// Template 1: Keyboard Control (WASD)
-// Use this for keyboard-based movement on a diff-drive (tank) robot.
-// W/S = forward/backward, A/D = turn left/right.
+// K10 Bot Script
+// Mode: Keyboard Control (WASD)
+// Controls: W/S = forward/backward, A/D = turn left/right
 
-// *********************************************************************************
-// ** IMPORTANT: UPDATE THE BOT CONTROL LINE BELOW WITH YOUR BOT'S IP AND TOKEN ! **
-// *********************************************************************************
+// -----------------------------------------------------------------------------
+// Connection Setup (same pattern for all scripts)
+// 1) Set BOT_IP, BOT_PORT and BOT_TOKEN
+// 2) Run the script and wait for a "✓ Connected..." log line
+// -----------------------------------------------------------------------------
 const BOT_IP = '192.168.4.1';
 const BOT_PORT = '81';
 const BOT_TOKEN = 'YOUR BOT TOKEN HERE';
-  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
-  if (!connected) {
-    alert('❌ Could not connect to bot. Check IP and token.');
-    return;
-  }
 
 const LEFT_WHEEL = 0;
 const RIGHT_WHEEL = 1;
 const keys = {};
-let servos_attached = false;
+let servosAttached = false;
 
 function ensureServosAttached() {
-  if (servos_attached) return;
+  if (servosAttached) return;
   if (typeof isMasterRegistered !== 'undefined' && !isMasterRegistered) return;
 
   attachServo(LEFT_WHEEL, SERVO_TYPES.ROTATIONAL);
   attachServo(RIGHT_WHEEL, SERVO_TYPES.ROTATIONAL);
-  servos_attached = true;
-  _scriptLog('✓ Wheel servos attached');
+  servosAttached = true;
+  _scriptLog('✓ Servos attached');
 }
 
 function updateMovement() {
@@ -51,12 +48,12 @@ function updateMovement() {
 async function initializeKeyboardControl() {
   const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
   if (!connected) {
-    _scriptLog('❌ Could not connect to bot. Check IP/port/token.');
+    _scriptLog('❌ Connection failed. Check BOT_IP, BOT_PORT and BOT_TOKEN.');
     return;
   }
 
   ensureServosAttached();
-  _scriptLog('✓ Keyboard control ready (W=forward, S=back, A=left, D=right)');
+  _scriptLog('✓ Connected. Keyboard control ready (W=forward, S=back, A=left, D=right).');
 }
 
 initializeKeyboardControl();

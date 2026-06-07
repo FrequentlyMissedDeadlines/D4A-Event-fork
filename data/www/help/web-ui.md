@@ -11,15 +11,15 @@ Every page shares the same top navigation bar:
 
 | Link | Page | Purpose |
 |---|---|---|
-| 🧠 Bot | `index.html` | Register master, configure WiFi |
-| 📷 Cam | `camera.html` | Snapshot or live camera stream |
-| 🕹 Learn | `BotScriptUserGuide.html` | JavaScript scripting reference (opens in new tab) |
-| 📝 Play | `BotScript.html` | Write and run control scripts |
-| ℹ️ Build | `buildinfo.html` | Firmware/filesystem version info |
+|  🛜 Wifi | `index.html` | Register master, configure WiFi |
+| 📷 Live Cam | `camera.html` | Snapshot or live camera stream |
+| 📚 JS Doc | `BotScriptUserGuide.html` | JavaScript scripting reference (opens in new tab) |
+| 🎮 JS Play | `BotScript.html` | Write and run control scripts |
+| 🛠 Build infos | `buildinfo.html` | Firmware/filesystem version info |
 
 ---
 
-## 🧠 Bot — Settings page (`index.html`)
+##  🛜 Wifi — Settings page (`index.html`)
 
 The entry point. Use it to claim control of the bot and change its WiFi credentials.
 
@@ -49,7 +49,7 @@ Load, change, and save WiFi credentials stored in the bot's non-volatile memory.
 
 ---
 
-## 📷 Cam — Camera page (`camera.html`)
+## 📷 Live Cam — Camera page (`camera.html`)
 
 View the onboard camera from your browser.
 
@@ -65,7 +65,7 @@ In snapshot mode two extra buttons appear:
 
 ---
 
-## 📝 Play — Script Runner (`BotScript.html`)
+## 🎮 JS Play — Script Runner (`BotScript.html`)
 
 The main control interface. Write JavaScript that calls built-in functions to move servos, react to keyboard or gamepad input, and automate behaviour.
 
@@ -140,7 +140,7 @@ Remotely cycle the bot's TFT screen without touching the hardware.
 
 ---
 
-## ℹ️ Build — Firmware info (`buildinfo.html`)
+## 🛠 Build infos — Firmware info (`buildinfo.html`)
 
 Displays the git branch, commit SHA, build timestamp, and file counts for both the **running firmware** and the **mounted filesystem package**.
 
@@ -153,8 +153,8 @@ A one-line summary at the top tells you whether the two match. A mismatch usuall
 ```
 1. Power on the bot → it connects to WiFi and shows its IP on the TFT screen.
 2. Open http://<bot-ip>/ in your browser.
-3. 🧠 Bot page → enter the token → Register as Master.
-4. 📝 Play page → expand Control Panel → register again with the token
+3.  🛜 Wifi page → enter the token → Register as Master.
+4. 🎮 JS Play page → expand Control Panel → register again with the token
       (each browser tab registers independently).
 5. Paste or type a script → ▶️ Run script.
 6. Use keyboard / gamepad to control the bot in real time.

@@ -1,49 +1,56 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// sample-robot.js  —  Basic 2-motorized wheels robot with 2 arms
-// ─────────────────────────────────────────────────────────────────────────────
-// Servo wiring assumed:
-//   CH 0  Motor      (continuous rotation, green servo)
-//   CH 1  Direction  (angular 270°, grey servo)
-//   CH 2  Arm        (angular 270°, grey servo)
-// ─────────────────────────────────────────────────────────────────────────────
+// K10 Bot Script
+// Mode: Joystick Car (1 motor + direction + arm)
+// Controls: Arrow keys / gamepad D-Pad + left stick
 
-
-
-// *********************************************************************************
-// ** IMPORTANT: UPDATE THE BOT CONTROL LINE BELOW WITH YOUR BOT'S IP AND TOKEN ! **
-// *********************************************************************************
+// -----------------------------------------------------------------------------
+// Connection Setup (same pattern for all scripts)
+// 1) Set BOT_IP, BOT_PORT and BOT_TOKEN
+// 2) Run the script and wait for a "✓ Connected..." log line
+// -----------------------------------------------------------------------------
 const BOT_IP = '192.168.4.1';
 const BOT_PORT = '81';
 const BOT_TOKEN = 'YOUR BOT TOKEN HERE';
-  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
-  if (!connected) {
-    alert('❌ Could not connect to bot. Check IP and token.');
-    return;
-  }
 
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Servo mapping
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
+// Servo Mapping
+// -----------------------------------------------------------------------------
 // STEP 1 — channel names
 const MyServos = {
   MOTOR: 0,
   DIRECTION: 1,
   ARM: 2
 };
-current_direction = 0;
-// STEP 2 — attach servos once
-attachServo(MyServos.MOTOR, SERVO_TYPES.ROTATIONAL);
-attachServo(MyServos.DIRECTION, SERVO_TYPES.ANGULAR_270);
-attachServo(MyServos.ARM, SERVO_TYPES.ANGULAR_270);
-_scriptLog('✓ Servos attached');
+let currentDirection = 0;
+const keyStates = {};
+let servosAttached = false;
 
+function ensureServosAttached() {
+  if (servosAttached) return;
+  if (typeof isMasterRegistered !== 'undefined' && !isMasterRegistered) return;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Name some actions
-// ─────────────────────────────────────────────────────────────────────────────
+  attachServo(MyServos.MOTOR, SERVO_TYPES.ROTATIONAL);
+  attachServo(MyServos.DIRECTION, SERVO_TYPES.ANGULAR_270);
+  attachServo(MyServos.ARM, SERVO_TYPES.ANGULAR_270);
+  servosAttached = true;
+  _scriptLog('✓ Servos attached');
+}
+
+async function initializeJoystickRobotCar() {
+  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
+  if (!connected) {
+    _scriptLog('❌ Connection failed. Check BOT_IP, BOT_PORT and BOT_TOKEN.');
+    return;
+  }
+
+  ensureServosAttached();
+  _scriptLog('✓ Connected. Joystick robot car control ready.');
+}
+
+initializeJoystickRobotCar();
+
+// -----------------------------------------------------------------------------
+// Actions
+// -----------------------------------------------------------------------------
 
 function moveForward(speed = 100) {
   setServoSpeeds([[MyServos.MOTOR, speed]]);
@@ -53,8 +60,8 @@ function moveBackward(speed = 100) {
   setServoSpeeds([[MyServos.MOTOR, -speed]]);
 }
 function adjustDirection(increment = 1) {
-  current_direction += increment;
-  setServoSpeeds([[MyServos.DIRECTION, current_direction]]);
+  currentDirection += increment;
+  setServoSpeeds([[MyServos.DIRECTION, currentDirection]]);
 }
 function direction(position = 0) {
   setServoSpeeds([[MyServos.DIRECTION, position]]);
@@ -73,6 +80,8 @@ function ARM_Down() { setServoAngle(MyServos.ARM, -90); }
 
 
 CUSTOMCONTROL.onKeyDown = function (event) {
+  ensureServosAttached();
+
   const key = event.key.toLowerCase();
 
   // Prevent default for arrow keys
@@ -114,7 +123,7 @@ CUSTOMCONTROL.onKeyDown = function (event) {
 
 
   }
-}
+};
 
 /**
  * Handle keyboard key up
@@ -137,12 +146,14 @@ CUSTOMCONTROL.onKeyUp = function (event) {
       ARM_Mid();    // release Q → return arm to neutral position
       break;
   }
-}
+};
 
 const STICK_DEADZONE = 0.15;  // Prevent stick drift
 
 
 CUSTOMCONTROL.processGamepadInput = function (gamepad) {
+  ensureServosAttached();
+
 
   // Handle D-PAD for input for movement
   if (gamepad.buttons[XBOX_BUTTONS.DPAD_UP].pressed) {
@@ -162,20 +173,17 @@ CUSTOMCONTROL.processGamepadInput = function (gamepad) {
     if (Math.abs(stickY) < STICK_DEADZONE) stickY = 0;
 
     if (stickY !== 0 || stickX !== 0) {
-      // Convert to motor speeds
-
-
       // Clamp to valid range
       const speedClamped = Math.max(-100, Math.min(100, stickX));
       const directionClamped = Math.max(-100, Math.min(100, stickY));
 
       setServoSpeeds([[MyServos.MOTOR, speedClamped]]);
       setServoSpeeds([[MyServos.DIRECTION, directionClamped]]);
+    } else {
+      stop();
     }
-    else { stop(); }
   }
 
 };
-// ─────────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 

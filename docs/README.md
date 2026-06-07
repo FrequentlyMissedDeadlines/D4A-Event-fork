@@ -15,7 +15,7 @@ All documentation for contest participants is served directly by the bot at
 | [🔢 Binary Protocol](../data/www/help/binary-protocol.md) | Full binary frame reference (all services) |
 | [🏗 Architecture](../data/www/help/architecture.md) | High-level code architecture overview |
 
-JS scripting API: the **🕹 Learn** tab in the web UI (`BotScriptUserGuide.html`).
+JS scripting API: the **📚 JS Doc** tab in the web UI (`BotScriptUserGuide.html`).
 
 ---
 

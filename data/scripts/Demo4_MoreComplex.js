@@ -1,25 +1,46 @@
-// Template 4: State Machine (Complex Behavior)
-// Use this when your bot needs different modes (explore, capture, return).
-// ARM servo uses ANGULAR_270 type: valid angle range is 0° – 270°.
+// K10 Bot Script
+// Mode: State Machine (Complex Behavior)
+// Controls: A = explore, B = capture
 
-
-// *********************************************************************************
-// ** IMPORTANT: UPDATE THE BOT CONTROL LINE BELOW WITH YOUR BOT'S IP AND TOKEN ! **
-// *********************************************************************************
+// -----------------------------------------------------------------------------
+// Connection Setup (same pattern for all scripts)
+// 1) Set BOT_IP, BOT_PORT and BOT_TOKEN
+// 2) Run the script and wait for a "✓ Connected..." log line
+// -----------------------------------------------------------------------------
 const BOT_IP = '192.168.4.1';
 const BOT_PORT = '81';
 const BOT_TOKEN = 'YOUR BOT TOKEN HERE';
-  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
-  if (!connected) {
-    alert('❌ Could not connect to bot. Check IP and token.');
-    return;
-  }
 
 const LEFT_WHEEL = 0;
 const RIGHT_WHEEL = 1;
 const ARM = 2;
+let servosAttached = false;
 
 let currentState = 'idle';
+
+function ensureServosAttached() {
+  if (servosAttached) return;
+  if (typeof isMasterRegistered !== 'undefined' && !isMasterRegistered) return;
+
+  attachServo(LEFT_WHEEL,  SERVO_TYPES.ROTATIONAL);
+  attachServo(RIGHT_WHEEL, SERVO_TYPES.ROTATIONAL);
+  attachServo(ARM,         SERVO_TYPES.ANGULAR_270);
+  servosAttached = true;
+  _scriptLog('✓ Servos attached');
+}
+
+async function initializeComplexControl() {
+  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
+  if (!connected) {
+    _scriptLog('❌ Connection failed. Check BOT_IP, BOT_PORT and BOT_TOKEN.');
+    return;
+  }
+
+  ensureServosAttached();
+  _scriptLog('✓ Connected. Complex control ready (A=explore, B=capture).');
+}
+
+initializeComplexControl();
 
 function setState(newState) {
   currentState = newState;
@@ -50,14 +71,10 @@ async function capture() {
   }
 }
 
-// Step 1 — attach servos
-attachServo(LEFT_WHEEL,  SERVO_TYPES.ROTATIONAL);
-attachServo(RIGHT_WHEEL, SERVO_TYPES.ROTATIONAL);
-attachServo(ARM,         SERVO_TYPES.ANGULAR_270);
-_scriptLog('✓ Servos attached — ARM range: 0°–270°');
-
 // Gamepad control
 CUSTOMCONTROL.processGamepadInput = function(gamepad) {
+  ensureServosAttached();
+
   if (gamepad.buttons[XBOX_BUTTONS.A].pressed && currentState !== 'explore') {
     setState('explore');
     explore();

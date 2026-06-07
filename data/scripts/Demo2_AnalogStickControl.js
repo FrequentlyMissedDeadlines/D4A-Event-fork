@@ -1,37 +1,52 @@
-// Template 2: Analog Stick Control (with Deadzone)
-// Use this for smooth, analog left-stick control on a diff-drive (tank) robot.
-// Left stick: Y-axis = forward/backward, X-axis = steer left/right.
-// NOTE: Gamepad Y-axis is inverted (push forward → Y = -1.0), corrected below.
+// K10 Bot Script
+// Mode: Analog Stick Control (with deadzone)
+// Controls: Left stick Y = forward/backward, X = steer
 
-
-// *********************************************************************************
-// ** IMPORTANT: UPDATE THE BOT CONTROL LINE BELOW WITH YOUR BOT'S IP AND TOKEN ! **
-// *********************************************************************************
+// -----------------------------------------------------------------------------
+// Connection Setup (same pattern for all scripts)
+// 1) Set BOT_IP, BOT_PORT and BOT_TOKEN
+// 2) Run the script and wait for a "✓ Connected..." log line
+// -----------------------------------------------------------------------------
 const BOT_IP = '192.168.4.1';
 const BOT_PORT = '81';
 const BOT_TOKEN = 'YOUR BOT TOKEN HERE';
-  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
-  if (!connected) {
-    alert('❌ Could not connect to bot. Check IP and token.');
-    return;
-  }
-
 
 const LEFT_WHEEL = 0;
 const RIGHT_WHEEL = 1;
 const DEADZONE = 0.15;  // Prevent stick drift
+let servosAttached = false;
+
+function ensureServosAttached() {
+  if (servosAttached) return;
+  if (typeof isMasterRegistered !== 'undefined' && !isMasterRegistered) return;
+
+  attachServo(LEFT_WHEEL,  SERVO_TYPES.ROTATIONAL);
+  attachServo(RIGHT_WHEEL, SERVO_TYPES.ROTATIONAL);
+  servosAttached = true;
+  _scriptLog('✓ Servos attached');
+}
+
+async function initializeAnalogStickControl() {
+  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
+  if (!connected) {
+    _scriptLog('❌ Connection failed. Check BOT_IP, BOT_PORT and BOT_TOKEN.');
+    return;
+  }
+
+  ensureServosAttached();
+  _scriptLog('✓ Connected. Analog stick control ready (left stick to drive).');
+}
+
+initializeAnalogStickControl();
 
 function setSpeed(leftSpeed, rightSpeed) {
   setServoSpeeds([[LEFT_WHEEL, leftSpeed], [RIGHT_WHEEL, rightSpeed]]);
 }
 
-// Step 1 — attach servos
-attachServo(LEFT_WHEEL,  SERVO_TYPES.ROTATIONAL);
-attachServo(RIGHT_WHEEL, SERVO_TYPES.ROTATIONAL);
-_scriptLog('✓ Analog stick control ready (left stick to drive)');
-
 // Step 2 — override gamepad hook
 CUSTOMCONTROL.processGamepadInput = function(gamepad) {
+  ensureServosAttached();
+
   let stickX = gamepad.axes[STICK_AXES.LEFT_X];
   let stickY = gamepad.axes[STICK_AXES.LEFT_Y];
 

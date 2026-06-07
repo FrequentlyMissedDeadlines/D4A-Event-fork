@@ -1,33 +1,19 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// sample-robot.js  —  Basic 2-motorized tankrobot with 2 arms
-// ─────────────────────────────────────────────────────────────────────────────
-// Servo wiring assumed:
-//   CH 0  Left  wheel  (continuous rotation, green servo)
-//   CH 1  Right wheel  (continuous rotation, green servo)
-//   CH 2  ARM_1          (angular 270°, grey servo)
-//   CH 3  ARM_2          (angular 270°, grey servo)
-// ─────────────────────────────────────────────────────────────────────────────
+// K10 Bot Script
+// Mode: Keyboard Tank (2 wheels + 2 arms)
+// Controls: Arrow keys for drive, Q/W/E and A/S/D for arms
 
-
-
-// *********************************************************************************
-// ** IMPORTANT: UPDATE THE BOT CONTROL LINE BELOW WITH YOUR BOT'S IP AND TOKEN ! **
-// *********************************************************************************
+// -----------------------------------------------------------------------------
+// Connection Setup (same pattern for all scripts)
+// 1) Set BOT_IP, BOT_PORT and BOT_TOKEN
+// 2) Run the script and wait for a "✓ Connected..." log line
+// -----------------------------------------------------------------------------
 const BOT_IP = '192.168.4.1';
 const BOT_PORT = '81';
 const BOT_TOKEN = 'YOUR BOT TOKEN HERE';
-  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
-  if (!connected) {
-    alert('❌ Could not connect to bot. Check IP and token.');
-    return;
-  }
 
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Servo mapping
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
+// Servo Mapping
+// -----------------------------------------------------------------------------
 // STEP 1 — channel names
 const MyServos = {
   LEFT_WHEEL: 0,
@@ -35,18 +21,37 @@ const MyServos = {
   ARM_1: 2,
   ARM_2: 3
 };
+const keyStates = {};
+let servosAttached = false;
 
-// STEP 2 — attach servos once
-attachServo(MyServos.LEFT_WHEEL, SERVO_TYPES.ROTATIONAL);
-attachServo(MyServos.RIGHT_WHEEL, SERVO_TYPES.ROTATIONAL);
-attachServo(MyServos.ARM_1, SERVO_TYPES.ANGULAR_270);
-attachServo(MyServos.ARM_2, SERVO_TYPES.ANGULAR_270);
-_scriptLog('✓ Servos attached');
+function ensureServosAttached() {
+  if (servosAttached) return;
+  if (typeof isMasterRegistered !== 'undefined' && !isMasterRegistered) return;
 
+  attachServo(MyServos.LEFT_WHEEL, SERVO_TYPES.ROTATIONAL);
+  attachServo(MyServos.RIGHT_WHEEL, SERVO_TYPES.ROTATIONAL);
+  attachServo(MyServos.ARM_1, SERVO_TYPES.ANGULAR_270);
+  attachServo(MyServos.ARM_2, SERVO_TYPES.ANGULAR_270);
+  servosAttached = true;
+  _scriptLog('✓ Servos attached');
+}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Name some actions
-// ─────────────────────────────────────────────────────────────────────────────
+async function initializeKeyboardTankControl() {
+  const connected = await getBotControl(BOT_IP, BOT_PORT, BOT_TOKEN);
+  if (!connected) {
+    _scriptLog('❌ Connection failed. Check BOT_IP, BOT_PORT and BOT_TOKEN.');
+    return;
+  }
+
+  ensureServosAttached();
+  _scriptLog('✓ Connected. Keyboard tank control ready.');
+}
+
+initializeKeyboardTankControl();
+
+// -----------------------------------------------------------------------------
+// Actions
+// -----------------------------------------------------------------------------
 
 function moveForward(speed = 100) {
   setServoSpeeds([[MyServos.LEFT_WHEEL, speed], [MyServos.RIGHT_WHEEL, speed]]);
@@ -78,6 +83,8 @@ function ARM2_Down() { setServoAngle(MyServos.ARM_2, -90); }
 
 
 CUSTOMCONTROL.onKeyDown = function (event) {
+  ensureServosAttached();
+
   const key = event.key.toLowerCase();
 
   // Prevent default for arrow keys
@@ -124,7 +131,7 @@ CUSTOMCONTROL.onKeyDown = function (event) {
 
 
   }
-}
+};
 
 /**
  * Handle keyboard key up
@@ -141,10 +148,9 @@ CUSTOMCONTROL.onKeyUp = function (event) {
       stopWheels();
       break;
     case 'q':
-      relax();
+      ARM1_Mid();
       break;
   }
-}
-// ─────────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────
+};
+// -----------------------------------------------------------------------------
 
