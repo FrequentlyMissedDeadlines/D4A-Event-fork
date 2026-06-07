@@ -175,7 +175,7 @@ The HTTP server also serves all files under `/www` on LittleFS as the site root 
 |---|---|
 | `http://<bot-ip>/` | `/www/index.html` |
 | `http://<bot-ip>/BotScript.html` | `/www/BotScript.html` |
-| `http://<bot-ip>/api/buildinfo.json` | Runtime-generated JSON |
+| `http://<bot-ip>/buildinfo.json` | Runtime-generated JSON |
 | `http://<bot-ip>/cam/snapshot` | Live JPEG from camera |
 | `http://<bot-ip>/cam/stream` | MJPEG stream |
 | `http://<bot-ip>/scripts/` | Script CRUD API (GET list, GET/PUT/DELETE item) |

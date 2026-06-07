@@ -31,7 +31,7 @@ GENERATED_HEADER_PATH = GENERATED_INCLUDE_DIR / "BuildInfo.h"
 BUILDINFO_HTML_PATH = DATA_WWW_DIR / "buildinfo.html"
 SCHEMA_VERSION = 1
 GENERATOR_VERSION = "1.0"
-BUILDINFO_API_PATH = "/api/buildinfo.json"
+BUILDINFO_API_PATH = "/buildinfo.json"
 IGNORED_CODE_DIRS = {
     ".git",
     ".pio",

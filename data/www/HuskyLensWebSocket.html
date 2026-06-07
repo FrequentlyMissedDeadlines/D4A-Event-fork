@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HuskyLens WebSocket Demo</title>
+  <link rel="stylesheet" href="./amaker.css">
+  <style>
+    .hl-wrap { display: flex; flex-wrap: wrap; gap: 12px; }
+    .hl-panel { background: rgba(255,255,255,0.6); border-radius: 6px; padding: 10px; }
+    .hl-left { min-width: 300px; flex: 1; }
+    .hl-right { min-width: 660px; }
+    .hl-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+    .hl-label { min-width: 95px; font-weight: 600; color: #111; }
+    .hl-input { min-width: 130px; padding: 6px; }
+    .hl-canvas-box { background: #101010; border: 1px solid #5d5d5d; padding: 8px; border-radius: 6px; }
+    .hl-canvas-title { color: #ddd; margin-bottom: 6px; font-size: 13px; }
+    #hl-canvas { display: block; background: #000; border: 1px solid #444; image-rendering: pixelated; }
+    .hl-stat { font-family: monospace; color: #111; margin: 2px 0; }
+    .hl-ok { color: #2e7d32; }
+    .hl-err { color: #c62828; }
+    .hl-note { font-size: 12px; color: #333; }
+  </style>
+</head>
+<body>
+  <nav class="topnav">
+    <a href="./index.html"> 🛜 Wifi</a>
+    <a href="./camera.html">📷 Live Cam</a>
+    <a href="./WebSocketJoystick.html">🕹 Default Play</a>
+    <a href="./HuskyLensWebSocket.html" class="active">👁 HuskyLens Demo</a>
+    <a href="./BotScript.html">🎮 JS Play</a>
+  </nav>
+
+  <h1 id="pageTitle">👁 HuskyLens WebSocket Demo <span id="titleStatus" style="font-size:0.6em;color:#999;"></span></h1>
+
+  <div class="hl-wrap">
+    <section class="hl-panel hl-left">
+      <h2>Connection</h2>
+      <div class="hl-row">
+        <span class="hl-label">Bot IP</span>
+        <input id="hl-ip" class="hl-input" type="text" placeholder="192.168.4.1">
+      </div>
+      <div class="hl-row">
+        <span class="hl-label">WS Port</span>
+        <input id="hl-port" class="hl-input" type="text" value="81">
+      </div>
+      <div class="hl-row">
+        <button class="btn" id="hl-connect">Connect</button>
+        <button class="btn" id="hl-disconnect">Disconnect</button>
+      </div>
+
+      <h2>Demo Actions</h2>
+      <div class="hl-row">
+        <button class="btn" id="hl-request-once">Request Frame Once</button>
+        <button class="btn" id="hl-show-screen">Show K10 Husky Screen</button>
+      </div>
+      <div class="hl-row">
+        <button class="btn" id="hl-simulate">Simulate Frame</button>
+        <label><input id="hl-grid-toggle" type="checkbox" checked> Grid</label>
+        <label><input id="hl-label-toggle" type="checkbox" checked> Labels</label>
+      </div>
+
+      <h2>Status</h2>
+      <div class="hl-stat" id="hl-status">WS: disconnected</div>
+      <div class="hl-stat" id="hl-frame">Frame: -</div>
+      <div class="hl-stat" id="hl-counts">Blocks: 0  Arrows: 0</div>
+      <div class="hl-stat" id="hl-native-size">Native: 320x240</div>
+      <div class="hl-stat" id="hl-display-size">Display: 640x480 (2.00x)</div>
+      <div class="hl-note">
+        Expected stream payloads supported by this demo:
+        JSON text (type="huskylens") or binary action 0x70 (custom demo frame v1).
+      </div>
+    </section>
+
+    <section class="hl-panel hl-right">
+      <div class="hl-canvas-box">
+        <div class="hl-canvas-title">Detection View: Native 320x240 -> Display 640x480</div>
+        <canvas id="hl-canvas" width="640" height="480"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <script src="./common.js"></script>
+  <script src="./HuskyLensWebSocket.js"></script>
+  <div class="statusbar">
+    <span class="status-left" id="page-status"></span>
+    <span class="status-right">🏠 K10 Bot</span>
+  </div>
+</body>
+</html>

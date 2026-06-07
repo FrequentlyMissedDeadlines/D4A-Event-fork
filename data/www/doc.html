@@ -1,0 +1,29 @@
+<html>
+    <body>
+        <script src="./marked.min.js"></script>
+        <script>
+// Configure marked with highlight.js
+marked.setOptions({
+  highlight: (code, lang) => {
+    if (lang && hljs.getLanguage(lang)) {
+      return hljs.highlight(code, { language: lang }).value;
+    }
+    return code;
+  }
+});
+
+async function loadMarkdown(filePath, targetElementId) {
+  const response = await fetch(filePath);
+  const markdown = await response.text();
+  const html = marked.parse(markdown);
+  document.getElementById(targetElementId).innerHTML = html;
+}
+</script>
+<div id="content">
+<script>
+  loadMarkdown('./D4A%20contest%20guide.md', 'content');
+</script>
+
+</div>
+    </body>
+</html>

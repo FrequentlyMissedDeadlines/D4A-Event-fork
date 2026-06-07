@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>K10 Bot Control Panel</title>
+  <link rel="stylesheet" href="./amaker.css">
+  <link rel="icon" href="./favicon.svg">
+
+</head>
+<body>
+  <nav class="topnav">
+    <a href="./index.html" class="active"> 🛜 Wifi</a>
+    <a href="./camera.html">📷 Live Cam</a>
+    <a href="./BotScriptUserGuide.html" target="_blank">📚 JS Learn</a>
+    <a href="./BotScript.html" >🎮 JS Play</a>
+    <a href="./buildinfo.html">ℹ️ Build</a>
+  </nav>
+    <h1 id="pageTitle"> 🛜 Wifi Settings.<span id="titleStatus" style="font-size: 0.6em; color: #999;"></span></h1>
+
+  <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+
+    <div class="panel" style="flex:1;min-width:240px;">
+      <h2>🔑 I. Get control.</h2>
+      <div class="panel" style="margin-bottom:10px;">
+      You need to register a master token to allow this device to be controlled by a master controller (like BotScript).<br>
+       The master token is generated at boot time on device and will not be shared with anyone else. <br>
+    </div>
+
+      <div id="master-status-box" style="padding:8px 12px;border-radius:4px;margin-bottom:10px;font-size:13px;background:#f0f0f0;color:#555;">
+        Checking master status…
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;">
+          <label  for="master-token-input">Token</label>
+          <input id="master-token-input" type="text" placeholder="Enter bot token" autocomplete="off">
+        </div>
+        <button id="btn-register" class="btn-primary" onclick="doRegister()">Register as Master</button>
+        <button id="btn-unregister" class="btn-secondary" onclick="doUnregister()">Unregister</button>
+      </div>
+      <div id="master-feedback" style="margin-top:8px;font-size:12px;min-height:16px;"></div>
+
+      <h2>🔑 II. Update settings.</h2>
+      
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;">
+          <label  for="wifi-ssid-input">Wifi SSID</label>
+          <input id="wifi-ssid-input" type="text" placeholder="Enter wifi ssid" autocomplete="off">
+        </div>
+        <div style="flex:1;min-width:140px;">
+          <label  for="wifi-password-input">Wifi Password</label>
+          <input id="wifi-password-input" placeholder="Enter wifi password" autocomplete="off">
+        </div>
+
+        <button id="btn-load-settings" class="btn-secondary" onclick="loadSettings()">Load Settings</button>
+        <button id="btn-save-settings" class="btn-primary" onclick="saveSettings()">Save Settings</button>
+        <button id="btn-reset-settings" class="btn-secondary" onclick="resetDefaultSettings()">Reset board settings to Default</button>
+ 
+    </div>
+      <div id="settings-feedback" style="margin-top:8px;font-size:12px;min-height:16px;"></div>
+ </div>
+
+
+  </div><!-- outer flex -->
+
+  <script src="./index.js"></script>
+  <div class="statusbar">
+    <span class="status-left" id="page-status"></span>
+    <span class="status-right">🏠 K10 Bot</span>
+  </div>
+</body>
+</html>

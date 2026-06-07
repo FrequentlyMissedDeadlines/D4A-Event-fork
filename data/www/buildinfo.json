@@ -1,0 +1,32 @@
+{
+  "build_role": "filesystem-package",
+  "code_snapshot_at_filesystem_build": {
+    "built_at_utc": "2026-04-02T06:38:02Z",
+    "code_tree_hash": "cb7bae28275da37d68050f44b71d402723ff2657",
+    "file_count": 41,
+    "total_bytes": 349356
+  },
+  "filesystem_package": {
+    "built_at_utc": "2026-04-02T06:38:02Z",
+    "data_tree_hash": "4eca9f30aaa44a453d8ee7d872a91213b295c7ff",
+    "file_count": 29,
+    "total_bytes": 3627072
+  },
+  "generator_version": "1.0",
+  "note": "Firmware upload and filesystem upload can be done separately. Compare this file with /buildinfo.json when debugging.",
+  "project": {
+    "board": "unihiker_k10",
+    "name": "k10-bot",
+    "pio_env": "unihiker_k10"
+  },
+  "schema_version": 1,
+  "source_snapshot": {
+    "branch": "lightercode",
+    "commit_sha": "f456a724f1b7ac8fc45396d35b07d9965c45f141",
+    "commit_short": "f456a72",
+    "dirty": true,
+    "exact_tag": "",
+    "nearest_tag": "v260315",
+    "repository_name": "k10-bot"
+  }
+}

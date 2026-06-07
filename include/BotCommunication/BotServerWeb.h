@@ -66,7 +66,7 @@ namespace BotServerWebConsts
     constexpr const char path_echo[]          PROGMEM = "/api/echo";
     constexpr const char path_fsprobe[]       PROGMEM = "/api/fsprobe";
     constexpr const char path_logs_api[]      PROGMEM = "/api/logs";
-    constexpr const char path_buildinfo_api[] PROGMEM = "/api/buildinfo.json";
+    constexpr const char path_buildinfo_api[] PROGMEM = "/buildinfo.json";
     constexpr const char param_cmd[]          PROGMEM = "cmd";
     constexpr const char mime_octet[]         PROGMEM = "application/octet-stream";
     constexpr const char mime_text[]          PROGMEM = "text/plain";

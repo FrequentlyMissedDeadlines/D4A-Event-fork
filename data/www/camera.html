@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>K10 Camera Control - aMaker</title>
+  <link rel="stylesheet" href="./amaker.css">
+  <link rel="stylesheet" href="./camera.css">
+</head>
+<body>
+  <nav class="topnav">
+    <a href="./index.html" > 🛜 Wifi</a>
+    <a href="./camera.html" class="active">📷 Live Cam</a>
+    <a href="./BotScriptUserGuide.html" target="_blank">📚 JS Learn</a>
+    <a href="./BotScript.html" >🎮 JS Play</a>
+    
+  </nav>
+      <h1 id="pageTitle">📷 K10 Camera Control <span id="titleStatus" style="font-size: 0.6em; color: #999;"></span></h1>
+
+  <div class="webcam-container">
+    <div class="status-bar">
+      <span class="status-indicator inactive" id="statusIndicator"></span>
+      <span id="statusText">Camera status: Loading...</span>
+    </div>
+
+    <div class="cam-layout">
+    <div class="mode-selector">
+      <div class="mode-buttons">
+        <button class="mode-btn off active" onclick="setMode('off')" id="btnOff">
+          ∅ Camera off
+        </button>
+        <button class="mode-btn" onclick="setMode('snapshot')" id="btnSnapshot">
+          📸 Snapshot
+        </button>
+        <button class="mode-btn" onclick="setMode('stream')" id="btnStream">
+          🎥 Live Stream
+        </button>
+      </div>
+    </div>
+
+    <div class="camera-viewport">
+      <div class="camera-image-container">
+        <img src="" alt="Camera view" class="camera-image" id="cameraImage">
+        <div class="placeholder" id="placeholder">
+          Camera is off. Select a mode to view the camera feed.
+        </div>
+      </div>
+      <div class="camera-controls" id="cameraControls" style="display: none;">
+        <button onclick="captureSnapshot()" class="btn" id="btnCapture">
+          📸 Capture New Snapshot
+        </button>
+        <button onclick="downloadImage()" class="btn" id="btnDownload">
+          💾 Download Image
+        </button>
+      </div>
+    </div>
+    </div><!-- /.cam-layout -->
+  </div>
+
+  <script src="./camera.js"></script>
+  <div class="statusbar">
+    <span class="status-left" id="page-status"></span>
+    <span class="status-right">📷 Live Camera</span>
+  </div>
+</body>
+</html>
