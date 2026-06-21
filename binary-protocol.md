@@ -120,7 +120,7 @@ Mixing angle and speed commands on the wrong servo type returns `resp_invalid_pa
 | `0x25` | INCREMENT_SERVOS_ANGLE | `[servo_mask][delta_hi][delta_lo]`          | `[0x25][status]`                                               | Big-endian signed i16 delta; clamped to type range |
 | `0x26` | GET_MOTORS_SPEED       | `[motor_mask]`                              | `[0x26][0x00][motor_mask][speed₀][speed₁…: i8]`               | One i8 per set bit, LSB-first                 |
 | `0x27` | GET_SERVOS_ANGLE       | `[servo_mask]`                              | `[0x27][0x00][servo_mask][ang₀_hi][ang₀_lo][ang₁_hi]…`        | Big-endian i16 per set bit, LSB-first         |
-| `0x28` | STOP_ALL_MOTORS        | *(none)*                                    | `[0x28][status]`                                               | No master check; emergency stop               |
+| `0x28` | STOP_ALL_MOTORS        | *(none)*                                    | `[0x28][status]`                                               | EMERGENCY STOP               |
 | `0x29` | GET_BATTERY            | *(none)*                                    | `[0x29][0x00][level: u8]`                                      | 0–100 %                                       |
 | `0x2A` | SET_SERVO270_ANGLE     | `[servo_mask][angle_hi][angle_lo]`          | `[0x2A][status]`                                               | Calibrated PWM; unsigned 0–270 (u16), clamped |
 
