@@ -2,6 +2,8 @@
 
 The smallest possible program to take control of the bot and move a servo.
 
+**🤖 Detailed instructions for coding assistants at the bottom.**
+
 ```
   ┌─ IMPORTANT ─────────────────────────────────┐  
   │ All documentation is available in markdown  │  
@@ -10,15 +12,16 @@ The smallest possible program to take control of the bot and move a servo.
 ```
 ## 0. Setup
 
-Plug the board with screen in the slot near the battery with the screen facing outside an camera the inside.
+Plug the board with a screen in the slot near the battery, keeping the screen facing outside and camera the inside.
+Verify both boards match the labels 0, 1, 2, 3V, GND before turning on.
 Switch on the board.
 Once booted, your board will start its own **wifi access point** wich name is shown on screen, and password is **amaker-club**.
-Connect to it with your laptop, and hopen your board home page at [http://192.168.4.1](http://192.168.4.1)
+Connect to it with your laptop, and open your board home page at [http://192.168.4.1](http://192.168.4.1)
 
 ## 1. Find the token
 
-On screen the bot shows a **5-character token** on the TFT screen (Screen 1 — App Info, row `Master`: `REG: XXXXX`).  
-You must send this exact token to claim master control.
+The bot displays a **5-character token** on the TFT screen (Screen 1 — App Info, row `Master`: `REG: XXXXX`).  
+You must send this exact token to claim master control. If you connect multiple laptops to the wifi, only the client registering with the master token will be allowed to send instructions to the robot.
 
 ---
 
@@ -30,7 +33,7 @@ You must send this exact token to claim master control.
 ③ SEND COMMANDS
 ```
 
-> **Heartbeat watchdog**: after the first `HEARTBEAT` frame arrives, the bot checks every tick whether another heartbeat arrived within **50 ms**. If not, it calls the emergency-stop callback (all motors/servos halted). Send heartbeats every **~30 ms** to stay safe.
+> **Heartbeat watchdog**: after the first `HEARTBEAT` frame arrives, the bot checks every tick whether another heartbeat arrived within **50 ms**. If not, it calls the emergency-stop callback (all motors/servos halted). Send heartbeats every **~30 ms** to keep the robot ON.
 
 ---
 
@@ -43,11 +46,10 @@ All frames start with one **action byte** = `(service_id << 4) | command_id`.
 | **Register** | `41 <token>` | token = 5 ASCII bytes, e.g. `41 44 34 41 41 41` for "D4AAA" |
 | **Heartbeat** | `43` | no reply sent by the bot |
 | **Unregister** | `42` | |
-| **Attach servo** (continuous) | `22 <mask> 02` | mask bit *n* = servo channel *n* |
-| **Attach servo** (270°) | `22 <mask> 01` | |
-| **Set servo speed** | `23 <mask> <speed>` | speed = signed byte −100…+100 |
-| **Set servo angle (270°)** | `2A <mask> <hi> <lo>` | angle 0–270, big-endian u16 |
-| **Stop all** | `28` | emergency stop, no master check |
+| **Attach green servo** (continuous) | `22 <mask> 02` | mask bit *n* = servo channel *n* |
+| **Attach grey servo** (270°) | `22 <mask> 01` | |
+| **Set green servo speed** | `23 <mask> <speed>` | speed = signed byte −100…+100 |
+| **Set grey servo angle (270°)** | `2A <mask> <hi> <lo>` | angle 0–270, big-endian u16 |
 
 **Response** for every command (except heartbeat):
 ```
@@ -66,7 +68,66 @@ All frames start with one **action byte** = `(service_id << 4) | command_id`.
 
 ---
 
-## 5. Minimal Python example — WebSocket
+## 5. Minimal Python example — UDP
+
+```python
+#!/usr/bin/env python3
+"""Same sequence over UDP (fire-and-forget, no connection needed)."""
+import socket, time
+
+BOT_IP   = "192.168.1.100"  # ← change
+BOT_PORT = 24642
+TOKEN    = "D4AAA"          # ← change
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.settimeout(0.5)
+
+def send(data: list[int]):
+    sock.sendto(bytes(data), (BOT_IP, BOT_PORT))
+
+def recv() -> list[int]:
+    try:
+        return list(sock.recvfrom(64)[0])
+    except Exception:
+        return []
+
+# ① Register
+send([0x41] + list(TOKEN.encode())) # REGISTER command with master token
+resp = recv()
+assert resp[1] == 0x00, f"Register failed: {resp}"
+print("Registered ✓")
+
+# ② First heartbeat
+send([0x43])
+last_hb = time.time()
+
+# ③ Attach servo 0 as continuous
+send([0x22, 0x01, 0x02]) # attach command = 0x22, mask = 0x01 (ch0), type = 2 (ROTATIONAL)
+recv()
+
+# ④ Spin forward 2 s
+end = time.time() + 2.0
+while time.time() < end:
+    send([0x23, 0x01, 100]) # SET_SERVOS_SPEED command = 0x23, mask = 0x01 (ch0), speed = +100
+    if time.time() - last_hb >= 0.030:
+        send([0x43])
+        last_hb = time.time()
+    time.sleep(0.010)
+
+# ⑤ Stop
+send([0x23, 0x01, 0]) # SET_SERVOS_SPEED command = 0x23, mask = 0x01 (ch0), speed = 0
+
+# ⑥ Unregister
+send([0x42])
+recv()
+print("Unregistered ✓")
+
+sock.close()
+```
+
+---
+
+## 6. Minimal Python example — WebSocket
 
 ```python
 #!/usr/bin/env python3
@@ -104,20 +165,20 @@ send(ws, [0x43])
 last_hb = time.time()
 
 # ③ Attach servo 0 as continuous rotation
-send(ws, [0x22, 0x01, 0x02])  # mask=0x01 (ch0), type=2 (ROTATIONAL)
+send(ws, [0x22, 0x01, 0x02])  # attach command = 0x22, mask = 0x01 (ch0), type = 2 (ROTATIONAL)
 recv(ws)
 
 # ④ Spin servo 0 forward for 2 seconds, sending heartbeats
 end = time.time() + 2.0
 while time.time() < end:
-    send(ws, [0x23, 0x01, 100])  # SET_SERVOS_SPEED ch0 speed=+100
+    send(ws, [0x23, 0x01, 100])  # SET_SERVOS_SPEED command = 0x23, mask = 0x01 (ch0), speed = +100
     if time.time() - last_hb >= 0.030:
         send(ws, [0x43])          # heartbeat
         last_hb = time.time()
     time.sleep(0.010)
 
 # ⑤ Stop servo 0
-send(ws, [0x23, 0x01, 0])
+send(ws, [0x23, 0x01, 0]) # SET_SERVOS_SPEED command = 0x23, mask = 0x01 (ch0), speed = 0
 recv(ws)
 
 # ⑥ Unregister
@@ -126,65 +187,6 @@ recv(ws)
 print("Unregistered ✓")
 
 ws.close()
-```
-
----
-
-## 6. Minimal Python example — UDP
-
-```python
-#!/usr/bin/env python3
-"""Same sequence over UDP (fire-and-forget, no connection needed)."""
-import socket, time
-
-BOT_IP   = "192.168.1.100"  # ← change
-BOT_PORT = 24642
-TOKEN    = "D4AAA"          # ← change
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.settimeout(0.5)
-
-def send(data: list[int]):
-    sock.sendto(bytes(data), (BOT_IP, BOT_PORT))
-
-def recv() -> list[int]:
-    try:
-        return list(sock.recvfrom(64)[0])
-    except Exception:
-        return []
-
-# ① Register
-send([0x41] + list(TOKEN.encode()))
-resp = recv()
-assert resp[1] == 0x00, f"Register failed: {resp}"
-print("Registered ✓")
-
-# ② First heartbeat
-send([0x43])
-last_hb = time.time()
-
-# ③ Attach servo 0 as continuous
-send([0x22, 0x01, 0x02])
-recv()
-
-# ④ Spin forward 2 s
-end = time.time() + 2.0
-while time.time() < end:
-    send([0x23, 0x01, 100])
-    if time.time() - last_hb >= 0.030:
-        send([0x43])
-        last_hb = time.time()
-    time.sleep(0.010)
-
-# ⑤ Stop
-send([0x23, 0x01, 0])
-
-# ⑥ Unregister
-send([0x42])
-recv()
-print("Unregistered ✓")
-
-sock.close()
 ```
 
 ---
