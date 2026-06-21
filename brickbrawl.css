@@ -33,6 +33,9 @@ body {
     linear-gradient(180deg, #09111d 0%, #05080f 100%);
   position: relative;
   overflow-x: hidden;
+  /* Ensure page content doesn't scroll under the fixed warning stripes */
+  padding-top: 34px;
+  padding-bottom: 34px;
 }
 
 body::before,
@@ -44,11 +47,11 @@ body::after {
   height: 34px;
   background: repeating-linear-gradient(
     90deg,
-    var(--panel) 0 28px,
+    var(--bg) 0 28px,
     var(--yellow) 28px 76px,
-    var(--panel) 76px 126px
+    var(--bg) 76px 126px
   );
-  opacity: 0.95;
+  opacity: 1;
   pointer-events: none;
   z-index: 10;
 }
@@ -419,6 +422,29 @@ a {
   background: linear-gradient(90deg, transparent, rgba(55, 217, 246, 0.5), transparent);
 }
 
+/* Ensure images and other embedded media inserted from Markdown
+   fit the content area and don't overflow the layout. */
+#md-content img,
+#md-content video,
+#md-content iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.75rem auto;
+}
+
+#md-content figure {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Prevent extremely tall images from pushing content off-screen */
+#md-content img {
+  max-height: 70vh;
+  object-fit: contain;
+}
+
 .loading {
   display: grid;
   place-items: center;
@@ -459,10 +485,17 @@ a {
     height: 24px;
     background: repeating-linear-gradient(
       90deg,
-      transparent 0 14px,
-      var(--yellow) 14px 44px,
-      transparent 44px 70px
+      var(--bg) 0 18px,
+      var(--yellow) 18px 36px,
+      var(--bg) 36px 54px
     );
+    opacity: 1;
+  }
+
+  /* Match smaller stripe height on narrow viewports so content remains visible */
+  body {
+    padding-top: 24px;
+    padding-bottom: 24px;
   }
 
   .topnav,

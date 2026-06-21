@@ -213,4 +213,8 @@ mask(2, 3)   # → 0x0C
 
 ---
 
-*More commands: [binary-protocol.md](binary-protocol.md) · Full transport details: [communication.md](communication.md)*
+### Need more details? 🤖 GitHub Copilot ready Markdown files
+
+- [binary-protocol.md](binary-protocol.md)
+- [communication.md](communication.md)
+
