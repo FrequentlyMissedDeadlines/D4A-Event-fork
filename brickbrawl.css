@@ -159,7 +159,7 @@ a {
   border: 1px solid rgba(255, 207, 40, 0.18);
   border-radius: var(--radius);
   background:
-    linear-gradient(135deg, rgba(7, 12, 20, 0.98), rgba(16, 23, 39, 0.94)),
+    linear-gradient(135deg, rgba(7, 12, 20, 1), rgba(16, 23, 39, 1)),
     url("./brickbrawl.png") center/cover no-repeat;
   box-shadow: var(--shadow);
   overflow: hidden;
